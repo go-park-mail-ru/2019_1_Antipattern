@@ -19,13 +19,13 @@
       },
       {
         "type": "log",
-        "status": "logErr",
-        "message": "Unknown login",
+        "status": "loginErr",
+        "message": "Incorrect login",
         "field": "login"
       },
       {
         "type": "log",
-        "status": "passErr",
+        "status": "passwordErr",
         "message": "Incorrect password",
         "field": "password"
       }

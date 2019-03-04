@@ -75,10 +75,10 @@ func NewUser(login string, password string, email string, name string) (*User, e
 func Auth(login string, password string) (*User, error) {
 	user, ok := users[login]
 	if !ok {
-		return nil, errors.New("User not exists " + login)
+		return nil, errors.New("login")
 	}
 	if user.password_hash != password {
-		return nil, errors.New("Wrong password " + login)
+		return nil, errors.New("password")
 	}
 
 	return &user, nil

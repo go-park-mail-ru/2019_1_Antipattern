@@ -1,33 +1,16 @@
 package main
 
-type RegResponce struct {
+type Response struct {
 	Type    string `json:"type"`
 	Status  string `json:"status"`
 	Message string `json:"message,omitempty"`
 	Field   string `json:"field,omitempty"`
+	Payload	ResponsePayload `json:"payload,omitempty"`
 }
 
-type LogResponce struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Message string `json:"message,omitempty"`
-	Field   string `json:"field,omitempty"`
-}
-
-type AuthResponce struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Message string `json:"message,omitempty"`
-}
-
-type UserInfoResponce struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Message string `json:"message,omitempty"`
-	Payload struct {
-		Login      string
-		Email      string
-		Name       string
-		AvatarPath string
-	} `json:"payload,omitempty"`
+type ResponsePayload struct {
+	Login      string `json:"login,omitempty"`
+	Email      string `json:"email,omitempty"`
+	Name       string `json:"name,omitempty"`
+	AvatarPath string `json:"avatar,omitempty"`
 }
