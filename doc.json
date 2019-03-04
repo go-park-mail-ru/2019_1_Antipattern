@@ -1,35 +1,35 @@
 {
-  "type" : "form_status", 
-  "status" : "already_exists",
-  "message" : "User already exists",
-  "field" : "login"
+  "responces": [
+    {
+      "type": "form_status",
+      "status": "already_exists",
+      "message": "User already exists",
+      "field": "login"
+    },
+    {
+      "type": "form_status",
+      "status": "success",
+      "message": ""
+    },
+
+
+    {
+      "type": "auth",
+      "status": "unauthorized",
+      "message": "Authorization needed"
+    },
+    {
+      "type": "auth",
+      "status": "success",
+      "message": ""
+    },
+    {
+      "type": "user_data",
+      "login": "login",
+      "email": "email",
+      "name": "nickname",
+      "score": 12345
+    }
+  ]
 }
-{
-  "type" : "form_status", 
-  "status" : "success",
-  "message" : ""
-}
-
-
-{
-  "type" : "auth",
-  "status" : "unauthorized",
-  "message" : "Authorization needed",
-}
-{
-  "type" : "auth",
-  "status" : "success",
-  "message" : "",
-}
-
-
-
-{
-  "type" : "user_data",
-  "login" : "login",
-  "email" : "email",
-  "name" : "nickname",
-  "score" : 12345
-}
-
 
