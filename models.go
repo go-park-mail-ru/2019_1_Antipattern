@@ -6,6 +6,11 @@ import (
 	"github.com/google/uuid"
 )
 
+type Model interface {
+	Delete() error
+	Save() error
+}
+
 type User struct {
 	uuid          uint32
 	login         string
@@ -28,6 +33,15 @@ func (session *Session) Save() error {
 }
 func (user *User) Save() error {
 	// TODO: Save to db logic
+	return nil
+}
+
+func (session *Session) Delete() error {
+	delete(sessions, session.sid)
+	return nil
+}
+func (user *User) Delete() error {
+	delete(users, user.login)
 	return nil
 }
 
