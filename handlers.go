@@ -30,7 +30,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 			response.Payload = ResponsePayload{
 				Login: user.login,
 				Email: user.email,
-				Name: user.email,
+				Name: user.name,
 				AvatarPath: "fish.jpg",
 			}
 		}
@@ -60,7 +60,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		response.Payload = ResponsePayload{
 			Login: user.login,
 			Email: user.email,
-			Name: user.email,
+			Name: user.name,
 			AvatarPath: "fish.jpg",
 		}
 	} else {
