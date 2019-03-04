@@ -2,14 +2,16 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 )
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 	login := r.FormValue("login")
 	password := r.FormValue("password")
+
 	response := Response{
-		Type: "log",
+		Type:    "log",
 		Payload: nil,
 	}
 
@@ -22,7 +24,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 			response.Status = "error"
 			response.Payload = ErrorPayload{
 				Message: "Incorrect" + wrong,
-				Field: wrong,
+				Field:   wrong,
 			}
 		} else {
 			session.user = user
@@ -31,9 +33,9 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 
 		if response.Status == "success" {
 			response.Payload = UserDataPayload{
-				Login: user.login,
-				Email: user.email,
-				Name: user.name,
+				Login:      user.login,
+				Email:      user.email,
+				Name:       user.name,
 				AvatarPath: "fish.jpg",
 			}
 		}
@@ -48,6 +50,10 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 // 	login, password, email, name
 // Writes status json to response
 func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+
+	fmt.Println(string(body))
 	login := r.FormValue("login")
 	password := r.FormValue("password")
 	email := r.FormValue("email")
@@ -61,9 +67,9 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		session.user = user
 		response.Status = "success"
 		response.Payload = UserDataPayload{
-			Login: user.login,
-			Email: user.email,
-			Name: user.name,
+			Login:      user.login,
+			Email:      user.email,
+			Name:       user.name,
 			AvatarPath: "fish.jpg",
 		}
 	} else {
@@ -71,7 +77,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		response.Status = "error"
 		response.Payload = ErrorPayload{
 			Message: "User already exists",
-			Field: "login",
+			Field:   "login",
 		}
 	}
 
