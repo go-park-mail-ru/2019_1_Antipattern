@@ -1,35 +1,57 @@
 {
-  "responces": [
-    {
-      "type": "form_status",
-      "status": "already_exists",
-      "message": "User already exists",
-      "field": "login"
-    },
-    {
-      "type": "form_status",
-      "status": "success",
-      "message": ""
-    },
-
-
-    {
-      "type": "auth",
-      "status": "unauthorized",
-      "message": "Authorization needed"
-    },
-    {
-      "type": "auth",
-      "status": "success",
-      "message": ""
-    },
-    {
-      "type": "user_data",
-      "login": "login",
-      "email": "email",
-      "name": "nickname",
-      "score": 12345
-    }
-  ]
+  "responces": {
+    "reg": [
+      {
+        "type": "reg",
+        "status": "success"
+      },
+      {
+        "type": "reg",
+        "status": "uniqErr",
+        "message": "User already exists",
+        "field": "login"
+      }
+    ],
+    "log": [
+      {
+        "type": "log",
+        "status": "success"
+      },
+      {
+        "type": "log",
+        "status": "logErr",
+        "message": "Unknown login",
+        "field": "login"
+      },
+      {
+        "type": "log",
+        "status": "passErr",
+        "message": "Incorrect password",
+        "field": "password"
+      }
+    ],
+    "auth": [
+      {
+        "type": "auth",
+        "status": "success"
+      },
+      {
+        "type": "auth",
+        "status": "authErr",
+        "message": "Authorization needed"
+      }
+    ],
+    "usinfo": [
+      {
+        "type": "usinfo",
+        "status": "success",
+        "payload": {
+          "login": "login",
+          "email": "email",
+          "name": "nickname",
+          "avatar": "path/to/avatar.jpg"
+        }
+      }
+    ]
+  }
 }
-
