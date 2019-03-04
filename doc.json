@@ -3,31 +3,49 @@
     "reg": [
       {
         "type": "reg",
-        "status": "success"
+        "status": "success",
+        "payload": {
+          "login": "login",
+          "email": "email",
+          "name": "nickname",
+          "avatar": "path/to/avatar.jpg"
+        }
       },
       {
         "type": "reg",
-        "status": "uniqErr",
-        "message": "User already exists",
-        "field": "login"
+        "status": "error",
+        "payload": {
+          "message": "User already exists",
+          "field": "login"
+        }
       }
     ],
     "log": [
       {
         "type": "log",
-        "status": "success"
+        "status": "success",
+        "payload": {
+          "login": "login",
+          "email": "email",
+          "name": "nickname",
+          "avatar": "path/to/avatar.jpg"
+        }
       },
       {
         "type": "log",
-        "status": "loginErr",
-        "message": "Incorrect login",
-        "field": "login"
+        "status": "error",
+        "payload": {
+          "message": "Incorrect login",
+          "field": "login"
+        }
       },
       {
         "type": "log",
-        "status": "passwordErr",
-        "message": "Incorrect password",
-        "field": "password"
+        "status": "error",
+        "payload": {
+          "message": "Incorrect password",
+          "field": "password"
+        }
       }
     ],
     "auth": [
@@ -37,8 +55,10 @@
       },
       {
         "type": "auth",
-        "status": "authErr",
-        "message": "Authorization needed"
+        "status": "error",
+        "payload": {
+          "message": "Authorization needed"
+        }
       }
     ],
     "usinfo": [

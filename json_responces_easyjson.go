@@ -17,7 +17,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjsonA1adf0ffDecodeTest(in *jlexer.Lexer, out *ResponsePayload) {
+func easyjsonA1adf0ffDecodeTest(in *jlexer.Lexer, out *UserDataPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -54,7 +54,7 @@ func easyjsonA1adf0ffDecodeTest(in *jlexer.Lexer, out *ResponsePayload) {
 		in.Consumed()
 	}
 }
-func easyjsonA1adf0ffEncodeTest(out *jwriter.Writer, in ResponsePayload) {
+func easyjsonA1adf0ffEncodeTest(out *jwriter.Writer, in UserDataPayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -102,26 +102,26 @@ func easyjsonA1adf0ffEncodeTest(out *jwriter.Writer, in ResponsePayload) {
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v ResponsePayload) MarshalJSON() ([]byte, error) {
+func (v UserDataPayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjsonA1adf0ffEncodeTest(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v ResponsePayload) MarshalEasyJSON(w *jwriter.Writer) {
+func (v UserDataPayload) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjsonA1adf0ffEncodeTest(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *ResponsePayload) UnmarshalJSON(data []byte) error {
+func (v *UserDataPayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjsonA1adf0ffDecodeTest(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *ResponsePayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *UserDataPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonA1adf0ffDecodeTest(l, v)
 }
 func easyjsonA1adf0ffDecodeTest1(in *jlexer.Lexer, out *Response) {
@@ -147,12 +147,14 @@ func easyjsonA1adf0ffDecodeTest1(in *jlexer.Lexer, out *Response) {
 			out.Type = string(in.String())
 		case "status":
 			out.Status = string(in.String())
-		case "message":
-			out.Message = string(in.String())
-		case "field":
-			out.Field = string(in.String())
 		case "payload":
-			(out.Payload).UnmarshalEasyJSON(in)
+			if m, ok := out.Payload.(easyjson.Unmarshaler); ok {
+				m.UnmarshalEasyJSON(in)
+			} else if m, ok := out.Payload.(json.Unmarshaler); ok {
+				_ = m.UnmarshalJSON(in.Raw())
+			} else {
+				out.Payload = in.Interface()
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -187,27 +189,7 @@ func easyjsonA1adf0ffEncodeTest1(out *jwriter.Writer, in Response) {
 		}
 		out.String(string(in.Status))
 	}
-	if in.Message != "" {
-		const prefix string = ",\"message\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Message))
-	}
-	if in.Field != "" {
-		const prefix string = ",\"field\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Field))
-	}
-	if true {
+	if in.Payload != nil {
 		const prefix string = ",\"payload\":"
 		if first {
 			first = false
@@ -215,7 +197,13 @@ func easyjsonA1adf0ffEncodeTest1(out *jwriter.Writer, in Response) {
 		} else {
 			out.RawString(prefix)
 		}
-		(in.Payload).MarshalEasyJSON(out)
+		if m, ok := in.Payload.(easyjson.Marshaler); ok {
+			m.MarshalEasyJSON(out)
+		} else if m, ok := in.Payload.(json.Marshaler); ok {
+			out.Raw(m.MarshalJSON())
+		} else {
+			out.Raw(json.Marshal(in.Payload))
+		}
 	}
 	out.RawByte('}')
 }
@@ -242,4 +230,87 @@ func (v *Response) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Response) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonA1adf0ffDecodeTest1(l, v)
+}
+func easyjsonA1adf0ffDecodeTest2(in *jlexer.Lexer, out *ErrorPayload) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "message":
+			out.Message = string(in.String())
+		case "field":
+			out.Field = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonA1adf0ffEncodeTest2(out *jwriter.Writer, in ErrorPayload) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	if in.Message != "" {
+		const prefix string = ",\"message\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Message))
+	}
+	if in.Field != "" {
+		const prefix string = ",\"field\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Field))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v ErrorPayload) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonA1adf0ffEncodeTest2(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v ErrorPayload) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonA1adf0ffEncodeTest2(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *ErrorPayload) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonA1adf0ffDecodeTest2(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *ErrorPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonA1adf0ffDecodeTest2(l, v)
 }
