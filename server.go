@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -10,11 +11,11 @@ import (
 )
 
 type User struct {
-	uuid          string
-	login         string
-	password_hash string
-	email         string
-	name          string
+	uuid         string
+	login        string
+	passwordHash string
+	email        string
+	name         string
 }
 
 type Session struct {
@@ -34,15 +35,14 @@ func createSession(user *User) string {
 }
 
 func Register(login string, password string, email string, name string) (string, error) {
-
 	if _, ok := users[login]; ok {
 		return "", errors.New("User already exists " + login)
 	}
 	user := User{
-		login:         login,
-		password_hash: password,
-		email:         email,
-		name:          name,
+		login:        login,
+		passwordHash: password,
+		email:        email,
+		name:         name,
 	}
 
 	users[login] = user
@@ -55,7 +55,7 @@ func Auth(login string, password string) (string, error) {
 	if !ok {
 		return "", errors.New("User not exists " + login)
 	}
-	if user.password_hash != password {
+	if user.passwordHash != password {
 		return "", errors.New("Wrong password " + login)
 	}
 	id := createSession(&user)
@@ -113,5 +113,5 @@ func main() {
 
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", fs))
 
-	http.ListenAndServe(":8080", r)
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
