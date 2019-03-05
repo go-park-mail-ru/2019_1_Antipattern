@@ -13,7 +13,7 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/login", SessionMiddleware(HandleLogin)).Methods("POST")
+	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin)).Methods("POST")
 	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister)).Methods("POST")
 	fs := http.FileServer(http.Dir("static/"))
 
