@@ -7,23 +7,20 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/neon.css">
     <link rel="stylesheet" href="css/fonts.css">
+    <script src="js/handlebars-v4.1.0.js"></script>
 </head>
 <body>
-<div class="container align-items-center text-center font-street-gathering font-lg">
-    <div id="menu">
-        <div class="top-menu justify-around align-items-center my-4">
-            <a href=# class="neon-button-red font-xl px-4 py-4">KPACUBO</a>
-        </div>
-        <div class="main-menu justify-center">
-            <a class="neon-button-cyan px-4 py-4" href=#>Single</a>
-            <a class="neon-button-blue px-4 py-4" href=#>Multiplayer</a>
-            <a class="neon-button-purple px-4 py-4" href=#>Leaderboard</a>
-            <a class="neon-button-green px-4 py-4" href=#>Signup</a>
-            <a class="neon-button-yellow px-4 py-4" href=#>Login</a>
-            <a href=# class="neon-button-blue px-4 py-4">About</a>
-        </div>
-    </div>
+<div id="root" class="container align-items-center text-center font-street-gathering font-lg">
+    
 </div>
+<script src="modules/ajax.js" type="text/javascript"></script>
+<script src="main.js" type="text/javascript"></script>
+<script src="modules/api.js"></script>
 
+<!--For test only. Delete this-->
+<script>
+    window.API.register("u1", "12345", "m@mail.ru", "kek" )
+</script>
+<!--END-->
 </body>
 </html>
