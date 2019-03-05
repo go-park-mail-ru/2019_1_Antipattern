@@ -1,16 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 )
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
-	//login := r.FormValue("login")
-	//password := r.FormValue("password")
 	request, err := getRequest(r)
 	if err != nil {
-		// TODO: handle getRequest error
+		fmt.Printf("An error occured: %v\nRequest: %v", err, request)
+		return
 	}
 
 	response := Response{
@@ -53,14 +53,12 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 // 	login, password, email, name
 // Writes status json to response
 func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
-	//login := r.FormValue("login")
-	//password := r.FormValue("password")
-	//email := r.FormValue("email")
-	//name := r.FormValue("name")
 	request, err := getRequest(r)
 	if err != nil {
-		// TODO: handle getRequest error
+		fmt.Printf("An error occured: %v\nRequest: %v", err, request)
+		return
 	}
+
 	response := Response{
 		Type: "reg",
 	}
@@ -94,14 +92,12 @@ func getRequest(r *http.Request) (*Request, error) {
 	byteBody, err := ioutil.ReadAll(body)
 	if err != nil {
 		return nil, err
-		// TODO: handle body read error
 	}
 
 	request := &Request{}
 	err = request.UnmarshalJSON(byteBody)
 	if err != nil {
 		return nil, err
-		// TODO: handle unmarshal read error
 	}
 
 	return request, nil
