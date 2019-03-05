@@ -5,7 +5,7 @@
   const ajax = window.AjaxModule;
   const apiPreffix = "";
 	class API {
-    _sendRequest(url, body, callback) {
+    _sendRequest(url, body, callback, type) {
       ajax.doPost( {
        callback: (xhr) => {
           try {
@@ -20,7 +20,7 @@
           if (!callback) {
             return
           }
-          if (object.type != 'reg') {
+          if (object.type != type) {
             callback('wrong_response', null)
             return
           }
@@ -39,7 +39,7 @@
         password : password,
         name : name
       };
-      this._sendRequest(url, data, callback)
+      this._sendRequest(url, data, callback, 'reg')
     }
 
     authorize(login, password, callback) {
@@ -48,7 +48,7 @@
         login : login,
         password : password
       };
-      this._sendRequest(url, data, callback)
+      this._sendRequest(url, data, callback, 'auth')
     }
 
     updateProfile(login, password, callback) {
