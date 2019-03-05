@@ -1,9 +1,9 @@
 package main
 
 type Response struct {
-	Type    string `json:"type"`
-	Status  string `json:"status"`
-	Payload	interface{} `json:"payload,omitempty"`
+	Type    string      `json:"type"`
+	Status  string      `json:"status"`
+	Payload interface{} `json:"payload,omitempty"`
 }
 
 type UserDataPayload struct {
@@ -16,4 +16,11 @@ type UserDataPayload struct {
 type ErrorPayload struct {
 	Message string `json:"message,omitempty"`
 	Field   string `json:"field,omitempty"`
+}
+
+type Request struct {
+	Login    string `json:"login"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	Name     string `json:"name"`
 }
