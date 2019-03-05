@@ -17,6 +17,7 @@ type User struct {
 	password_hash string
 	email         string
 	name          string
+	avatar        string
 }
 
 type Session struct {

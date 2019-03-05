@@ -15,6 +15,7 @@ func main() {
 
 	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin)).Methods("POST")
 	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister)).Methods("POST")
+	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload)).Methods("POST")
 	fs := http.FileServer(http.Dir("static/"))
 
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", fs))
