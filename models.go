@@ -32,9 +32,14 @@ func (session *Session) Save() error {
 	sessions[session.sid] = *session
 	return nil
 }
+
 func (user *User) Save() error {
 	// TODO: Save to db logic
 	return nil
+}
+
+func GetUsers(count, page int) ([]User, error) {
+	return nil, nil
 }
 
 func (session *Session) Delete() error {

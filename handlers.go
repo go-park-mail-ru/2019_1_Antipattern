@@ -1,6 +1,7 @@
 package main
 
 import (
+	json "encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,9 +13,10 @@ import (
 )
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
-	request, err := getRequest(r)
+	var userData = &Request{}
+	err := getRequest(userData, r)
 	if err != nil {
-		fmt.Printf("An error occured: %v\nRequest: %v", err, request)
+		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
 		return
 	}
 
@@ -26,7 +28,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 	if session.user != nil {
 		response.Status = "success"
 	} else {
-		user, err := Auth(request.Login, request.Password)
+		user, err := Auth(userData.Login, userData.Password)
 		if err != nil {
 			wrong := err.Error()
 			response.Status = "error"
@@ -44,7 +46,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 				Login:      user.login,
 				Email:      user.email,
 				Name:       user.name,
-				AvatarPath: "fish.jpg",
+				AvatarPath: user.avatar,
 			}
 		}
 	}
@@ -58,9 +60,10 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 // 	login, password, email, name
 // Writes status json to response
 func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
-	request, err := getRequest(r)
+	var userData = &Request{}
+	err := getRequest(userData, r)
 	if err != nil {
-		fmt.Printf("An error occured: %v\nRequest: %v", err, request)
+		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
 		return
 	}
 
@@ -68,7 +71,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		Type: "reg",
 	}
 
-	user, err := NewUser(request.Login, request.Password, request.Email, request.Name)
+	user, err := NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
 	if err == nil {
 		session.user = user
 		response.Status = "success"
@@ -127,20 +130,22 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session)
 
 }
 
-func getRequest(r *http.Request) (*Request, error) {
+func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) {
+
+}
+
+func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 	body := r.Body
 	defer body.Close()
 
 	byteBody, err := ioutil.ReadAll(body)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	marshaler.UnmarshalJSON(byteBody)
 
-	request := &Request{}
-	err = request.UnmarshalJSON(byteBody)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	return request, nil
+	return nil
 }
