@@ -19,8 +19,10 @@ func main() {
 	r.HandleFunc("/api/profile", SessionMiddleware(HandleUpdateUser, true)).Methods("PUT")
 	r.HandleFunc("/api/profile", SessionMiddleware(HandleGetUserData, true)).Methods("GET")
 	r.HandleFunc("/api/leaderbord/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, true)).Methods("GET")
-	fs := http.FileServer(http.Dir("static/"))
-	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", fs))
+	staticServer := http.FileServer(http.Dir("static/"))
+	mediaServer := http.FileServer(http.Dir("media/"))
+	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", staticServer))
+	r.PathPrefix("/media").Handler(http.StripPrefix("/media/", mediaServer))
 
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "static/index.html")

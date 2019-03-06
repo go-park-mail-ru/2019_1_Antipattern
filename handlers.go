@@ -103,7 +103,7 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session
 	}
 	defer rFile.Close()
 	//fmt.Fprintf(w, "%v", handler.Header)
-	filename := filepath.Join(filepath.Join(".", "media", "avatar",
+	filename := filepath.Join(filepath.Join("media", "avatar",
 		uuid.New().String()+handler.Filename))
 
 	wFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
