@@ -12,12 +12,12 @@ type Model interface {
 }
 
 type User struct {
-	uuid          uint32
-	login         string
-	password_hash string
-	email         string
-	name          string
-	avatar        string
+	uuid         uint32
+	login        string
+	passwordHash string
+	email        string
+	name         string
+	avatar       string
 }
 
 type Session struct {
@@ -34,8 +34,12 @@ func (session *Session) Save() error {
 }
 
 func (user *User) Save() error {
-	// TODO: Save to db logic
+	users[user.login] = *user
 	return nil
+}
+
+func GetUser(uuid uint32) (*User, error) {
+	return nil, nil
 }
 
 func GetUsers(count, page int) ([]User, error) {
@@ -67,11 +71,11 @@ func NewUser(login string, password string, email string, name string) (*User, e
 		return nil, errors.New("User already exists " + login)
 	}
 	user := User{
-		uuid:          uuid.New().ID(),
-		login:         login,
-		password_hash: password,
-		email:         email,
-		name:          name,
+		uuid:         uuid.New().ID(),
+		login:        login,
+		passwordHash: password,
+		email:        email,
+		name:         name,
 	}
 
 	users[login] = user
@@ -83,7 +87,7 @@ func Auth(login string, password string) (*User, error) {
 	if !ok {
 		return nil, errors.New("login")
 	}
-	if user.password_hash != password {
+	if user.passwordHash != password {
 		return nil, errors.New("password")
 	}
 
