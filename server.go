@@ -13,9 +13,9 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin)).Methods("POST")
-	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister)).Methods("POST")
-	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload)).Methods("POST")
+	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin, false)).Methods("POST")
+	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister, false)).Methods("POST")
+	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload, true)).Methods("POST")
 	fs := http.FileServer(http.Dir("static/"))
 
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", fs))

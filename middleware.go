@@ -2,7 +2,7 @@ package main
 
 import "net/http"
 
-func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *Session)) http.HandlerFunc {
+func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *Session), authRequiered bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("sid")
 		if err != nil {
@@ -23,6 +23,11 @@ func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *Session)) 
 				HttpOnly: true,
 			}
 			http.SetCookie(w, cookie)
+		}
+		if authRequiered && session.user == nil {
+			w.WriteHeader(http.StatusForbidden)
+			session.Save()
+			return
 		}
 		next(w, r, &session)
 		session.Save()

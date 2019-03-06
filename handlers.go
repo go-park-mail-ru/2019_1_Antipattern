@@ -91,10 +91,6 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 }
 
 func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session) {
-	if session.user == nil {
-		// TODO: write unauthorized to response
-		return
-	}
 	r.ParseMultipartForm(2 << 21) // 2 mb
 	rFile, handler, err := r.FormFile("avatar")
 	if err != nil {
@@ -122,6 +118,15 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session
 		// TODO: write error to response
 	}
 }
+
+func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
+
+}
+
+func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session) {
+
+}
+
 func getRequest(r *http.Request) (*Request, error) {
 	body := r.Body
 	defer body.Close()
