@@ -30,7 +30,7 @@ func main() {
 
 	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(r.URL.Path)
-		http.ServeFile(w, r, "../2019_1_DeathPacito-front/public/index.html")
+		http.ServeFile(w, r, "../2019_1_DeathPacito_front/public/index.html")
 	})
 
 	log.Fatal(http.ListenAndServe(":80", r))
