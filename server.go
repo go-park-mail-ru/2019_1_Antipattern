@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -25,11 +26,12 @@ func main() {
 	mediaServer := http.FileServer(http.Dir("media/"))
 	//r.PathPrefix("/public").Handler(http.StripPrefix("/public/", staticServer))
 	r.PathPrefix("/media").Handler(http.StripPrefix("/media/", mediaServer))
-	r.PathPrefix("/").Handler(http.StripPrefix("/", staticServer))
+	r.PathPrefix("/public").Handler(http.StripPrefix("/public/", staticServer))
 
-	//r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	//	http.ServeFile(w, r, "../2019_1_DeathPacito-front/public/index.html")
-	//})
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println(r.URL.Path)
+		http.ServeFile(w, r, "../2019_1_DeathPacito-front/public/index.html")
+	})
 
 	log.Fatal(http.ListenAndServe(":80", r))
 }
