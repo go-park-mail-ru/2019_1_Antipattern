@@ -6,6 +6,10 @@ type Response struct {
 	Payload interface{} `json:"payload,omitempty"`
 }
 
+type UsersPayload struct {
+	Users []User `json:"users"`
+}
+
 type UserDataPayload struct {
 	Login      string `json:"login,omitempty"`
 	Email      string `json:"email,omitempty"`
@@ -18,9 +22,14 @@ type ErrorPayload struct {
 	Field   string `json:"field,omitempty"`
 }
 
-type Request struct {
+type UsrRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
 	Name     string `json:"name"`
+}
+
+type LeaderboardRequest struct {
+	Count	int `json:"count"`
+	Page 	int `json:"page"`
 }

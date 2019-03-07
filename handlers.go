@@ -1,7 +1,7 @@
 package main
 
 import (
-	json "encoding/json"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,7 +13,7 @@ import (
 )
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
-	var userData = &Request{}
+	userData := &UsrRequest{}
 	err := getRequest(userData, r)
 	if err != nil {
 		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
@@ -60,7 +60,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 // 	login, password, email, name
 // Writes status json to response
 func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
-	var userData = &Request{}
+	userData := &UsrRequest{}
 	err := getRequest(userData, r)
 	if err != nil {
 		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
@@ -123,15 +123,86 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session
 }
 
 func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
+	request := &LeaderboardRequest{}
+	err := getRequest(request, r)
+	if err != nil {
+		fmt.Printf("An error occured: %v\nRequest: %v", err, request)
+		return
+	}
 
+	response := Response{
+		Type: "uslist",
+	}
+
+	userSlice, err := GetUsers(request.Count, request.Page)
+	if err != nil {
+		response.Status = "error"
+		response.Payload = ErrorPayload{
+			Message: "Not enough users",
+		}
+	} else {
+		response.Status = "success"
+		response.Payload = UsersPayload{
+			Users: userSlice,
+		}
+	}
+
+	byteResponse, _ := response.MarshalJSON()
+	w.Write(byteResponse)
 }
 
 func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session) {
+	user := session.user
+	response := Response{
+		Type: "usinfo",
+		Status: "success",
+	}
 
+	response.Payload = UserDataPayload{
+		Login: user.login,
+		Email: user.email,
+		Name: user.name,
+		AvatarPath: user.name,
+	}
+
+	byteResponse, _ := response.MarshalJSON()
+	w.Write(byteResponse)
 }
 
 func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) {
+	userData := &UsrRequest{}
+	err := getRequest(userData, r)
+	if err != nil {
+		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
+		return
+	}
 
+	user := session.user
+
+	if userData.Name != "" {
+		user.name = userData.Name
+	}
+
+	if userData.Password != "" {
+		user.name = userData.Password
+	}
+
+	user.Save()
+
+	response := Response{
+		Type: "usinfo",
+		Status: "success",
+	}
+
+	response.Payload = UserDataPayload{
+		Login:      user.login,
+		Email:      user.email,
+		Name:       user.name,
+		AvatarPath: user.avatar,
+	}
+
+	byteResponse, _ := response.MarshalJSON()
+	w.Write(byteResponse)
 }
 
 func getRequest(marshaler json.Unmarshaler, r *http.Request) error {

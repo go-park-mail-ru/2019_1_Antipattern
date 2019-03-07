@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
-
 	"github.com/google/uuid"
+	"sort"
 )
 
 type Model interface {
@@ -26,6 +26,7 @@ type Session struct {
 }
 
 var users map[string]User
+var uuidUserIndex map[uint32]string
 var sessions map[string]Session
 
 func (session *Session) Save() error {
@@ -39,11 +40,45 @@ func (user *User) Save() error {
 }
 
 func GetUser(uuid uint32) (*User, error) {
-	return nil, nil
+	login, exists := uuidUserIndex[uuid]
+	if !exists {
+		return nil, errors.New("wrong uuid")
+	}
+
+	user, ok := users[login]
+	if !ok {
+		return nil, errors.New("uuid-login match error")
+	}
+
+	return &user, nil
 }
 
 func GetUsers(count, page int) ([]User, error) {
-	return nil, nil
+	// Placeholder-like yet
+	min := count*(page-1) + 1
+	if min > len(users) {
+		return nil, errors.New("not enough users")
+	}
+
+	//var max uint = uint(math.Max(float64(count*page), float64(len(users))))
+
+	max := count*page
+	if max > len(users) {
+		max = len(users)
+	}
+
+	keySlice := make([]string, 0, len(users))
+	for k := range users {
+		keySlice = append(keySlice, k)
+	}
+	sort.Strings(keySlice)
+
+	userSlice := make([]User, len(users), len(users))
+	for _, v := range keySlice {
+		userSlice = append(userSlice, users[v])
+	}
+
+	return userSlice[min:max], nil
 }
 
 func (session *Session) Delete() error {
@@ -51,6 +86,7 @@ func (session *Session) Delete() error {
 	return nil
 }
 func (user *User) Delete() error {
+	delete(uuidUserIndex, user.uuid)
 	delete(users, user.login)
 	return nil
 }
@@ -68,7 +104,7 @@ func NewSession() *Session {
 
 func NewUser(login string, password string, email string, name string) (*User, error) {
 	if _, ok := users[login]; ok {
-		return nil, errors.New("User already exists " + login)
+		return nil, errors.New("user already exists " + login)
 	}
 	user := User{
 		uuid:         uuid.New().ID(),
@@ -79,6 +115,7 @@ func NewUser(login string, password string, email string, name string) (*User, e
 	}
 
 	users[login] = user
+	uuidUserIndex[user.uuid] = user.login
 	return &user, nil
 }
 
