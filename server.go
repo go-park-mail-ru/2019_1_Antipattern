@@ -9,6 +9,7 @@ import (
 
 func main() {
 	users = make(map[string]User)
+	uuidUserIndex = make(map[uint32]string)
 	sessions = make(map[string]Session)
 
 	r := mux.NewRouter()
