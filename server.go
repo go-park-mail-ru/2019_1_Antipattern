@@ -19,7 +19,7 @@ func main() {
 	r.HandleFunc("/api/profile", SessionMiddleware(HandleUpdateUser, true)).Methods("PUT")
 	r.HandleFunc("/api/profile", SessionMiddleware(HandleGetUserData, true)).Methods("GET")
 	r.HandleFunc("/api/leaderbord/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, true)).Methods("GET")
-	staticServer := http.FileServer(http.Dir("static/"))
+	staticServer := http.FileServer(http.Dir("../2019_1_DeathPacito_front/public"))
 	mediaServer := http.FileServer(http.Dir("media/"))
 	r.PathPrefix("/static").Handler(http.StripPrefix("/static/", staticServer))
 	r.PathPrefix("/media").Handler(http.StripPrefix("/media/", mediaServer))
@@ -28,5 +28,5 @@ func main() {
 		http.ServeFile(w, r, "static/index.html")
 	})
 
-	log.Fatal(http.ListenAndServe(":8081", r))
+	log.Fatal(http.ListenAndServe(":80", r))
 }
