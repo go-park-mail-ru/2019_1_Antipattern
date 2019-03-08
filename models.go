@@ -54,6 +54,22 @@ func GetUser(uuid uint32) (*User, error) {
 	return &user, nil
 }
 
+func GetUserByLogin(login string) (*User, error) {
+	user, exists := users[login]
+	if !exists {
+		return nil, errors.New("wrong login")
+	}
+
+	return &user, nil
+}
+
+func GetSession(id string) (*Session, error) {
+	session, exists := sessions[id]
+	if !exists {
+		return nil, errors.New("Wrong sid")
+	}
+	return &session, nil
+}
 func GetUsers(count, page int) ([]User, error) {
 	// Placeholder-like yet
 	min := count*(page-1) + 1
@@ -98,7 +114,6 @@ func NewSession() *Session {
 		sid:  id,
 		user: nil,
 	}
-
 	sessions[id] = session
 	return &session
 }

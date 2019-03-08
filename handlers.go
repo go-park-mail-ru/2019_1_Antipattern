@@ -70,7 +70,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 	response := Response{
 		Type: "reg",
 	}
-
+	
 	user, err := NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
 	if err == nil {
 		session.user = user
