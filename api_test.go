@@ -265,7 +265,7 @@ func TestGetLeaderboard(t *testing.T) {
 	for i := 1; i <= 27; i++ {
 		NewUser("npc_"+string(i), "12345", "mail"+string(i)+"@mail.ru", "Nick #"+string(i))
 	}
-	request, err := http.NewRequest("GET", "http://localhost/api/leaderbord/31", nil)
+	request, err := http.NewRequest("GET", "http://localhost/api/leaderbord/1", nil)
 	expectedBody := `NOT IMPLEMENTED!` //TODO: Implement this
 
 	response := httptest.NewRecorder()
