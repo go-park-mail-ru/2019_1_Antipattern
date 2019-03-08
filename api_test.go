@@ -71,7 +71,38 @@ func TestRegister(t *testing.T) {
 	}
 	CheckSessionSetCookie(t, *newUser, w)
 }
+func TestRegisterAlreadyRegistered(t *testing.T) {
+	InitModels()
+	_, err := NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
+	if err != nil {
+		t.Fatal("Can't create user")
+		return
+	}
+	body := strings.NewReader(`{
+		"login":"user_login",
+		"password" : 
+		"qweqwe234234&62342=",
+		"email": 
+		"death.pa_cito@mail.yandex.ru",
+		"name": "Gamer #23 @790-_%" }`)
 
+	r, err := http.NewRequest("POST", "http://localhost/api/register", body)
+	if err != nil {
+		t.Fatal("Can't initialize")
+		return
+	}
+	expectedBody := `{"type":"reg","status":"error","payload":{"message":"User already exists","field":"login"}}`
+
+	w := httptest.NewRecorder()
+	router := NewRouter()
+	router.ServeHTTP(w, r)
+
+	result, _ := ioutil.ReadAll(w.Body)
+	if strings.TrimSpace(string(result)) != expectedBody {
+		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+		return
+	}
+}
 func TestLogin(t *testing.T) {
 	InitModels()
 	user, err := NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
@@ -100,4 +131,61 @@ func TestLogin(t *testing.T) {
 		return
 	}
 	CheckSessionSetCookie(t, *user, w)
+}
+
+func TestLoginWrongPassword(t *testing.T) {
+	InitModels()
+	_, err := NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
+	if err != nil {
+		t.Fatal("Can't create user")
+		return
+	}
+	body := strings.NewReader(`{
+		"login":"user_login",
+		"password" : "asdasd"}`)
+
+	r, err := http.NewRequest("POST", "http://localhost/api/auth", body)
+	if err != nil {
+		t.Fatal("Can't initialize")
+		return
+	}
+	expectedBody := `{"type":"log","status":"error","payload":{"message":"Incorrectpassword","field":"password"}}`
+
+	w := httptest.NewRecorder()
+	router := NewRouter()
+	router.ServeHTTP(w, r)
+
+	result, _ := ioutil.ReadAll(w.Body)
+	if strings.TrimSpace(string(result)) != expectedBody {
+		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+		return
+	}
+}
+func TestLoginWrongLogin(t *testing.T) {
+	InitModels()
+	_, err := NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
+	if err != nil {
+		t.Fatal("Can't create user")
+		return
+	}
+	body := strings.NewReader(`{
+		"login":"lol",
+		"password" : "1235689"}`)
+
+	r, err := http.NewRequest("POST", "http://localhost/api/auth", body)
+	if err != nil {
+		t.Fatal("Can't initialize")
+		return
+	}
+	expectedBody := `{"type":"log","status":"error","payload":{"message":"Incorrectlogin","field":"login"}}`
+
+	w := httptest.NewRecorder()
+	router := NewRouter()
+	router.ServeHTTP(w, r)
+
+	result, _ := ioutil.ReadAll(w.Body)
+	if strings.TrimSpace(string(result)) != expectedBody {
+		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+		return
+	}
 }
