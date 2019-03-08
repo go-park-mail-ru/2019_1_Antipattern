@@ -95,7 +95,7 @@ func GetUsers(count, page int) ([]User, error) {
 		userSlice = append(userSlice, users[v])
 	}
 
-	return userSlice, nil
+	return userSlice[min:max], nil
 }
 
 func (session *Session) Delete() error {
