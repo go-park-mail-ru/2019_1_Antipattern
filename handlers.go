@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
@@ -70,7 +72,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 	response := Response{
 		Type: "reg",
 	}
-	
+
 	user, err := NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
 	if err == nil {
 		session.user = user
@@ -123,30 +125,30 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session
 }
 
 func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
-	request := &LeaderboardRequest{}
-	err := getRequest(request, r)
-	if err != nil {
-		fmt.Printf("An error occured: %v\nRequest: %v", err, request)
-		return
-	}
-
 	response := Response{
 		Type: "uslist",
 	}
-
-	userSlice, err := GetUsers(request.Count, request.Page)
+	page, err := strconv.Atoi(mux.Vars(r)["page"])
 	if err != nil {
 		response.Status = "error"
 		response.Payload = ErrorPayload{
-			Message: "Not enough users",
+			Message: "Wrong request",
 		}
 	} else {
-		response.Status = "success"
-		response.Payload = UsersPayload{
-			Users: userSlice,
+		userSlice, err := GetUsers(10, page)
+
+		if err != nil {
+			response.Status = "error"
+			response.Payload = ErrorPayload{
+				Message: "Not enough users",
+			}
+		} else {
+			response.Status = "success"
+			response.Payload = UsersPayload{
+				Users: userSlice,
+			}
 		}
 	}
-
 	byteResponse, _ := response.MarshalJSON()
 	w.Write(byteResponse)
 }
@@ -162,7 +164,7 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session)
 		Login:      user.login,
 		Email:      user.email,
 		Name:       user.name,
-		AvatarPath: user.name,
+		AvatarPath: user.avatar,
 	}
 
 	byteResponse, _ := response.MarshalJSON()
@@ -184,7 +186,7 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) 
 	}
 
 	if userData.Password != "" {
-		user.name = userData.Password
+		user.passwordHash = userData.Password
 	}
 
 	user.Save()

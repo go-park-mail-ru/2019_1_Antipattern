@@ -161,6 +161,7 @@ func TestLoginWrongPassword(t *testing.T) {
 		return
 	}
 }
+
 func TestLoginWrongLogin(t *testing.T) {
 	InitModels()
 	_, err := NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
@@ -188,4 +189,124 @@ func TestLoginWrongLogin(t *testing.T) {
 		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
 		return
 	}
+}
+
+func FakeLoginAndAuth(request *http.Request) (*User, error) {
+	user, err := NewUser("fake_user_login", "12345", "mail@mail.ru", "yasher")
+	if err != nil {
+		return nil, err
+	}
+	session := NewSession()
+	session.user = user
+	err = session.Save()
+	request.AddCookie(&http.Cookie{
+		Name:   "sid",
+		Secure: true,
+		Value:  session.sid})
+	return user, err
+}
+
+func TestGetProfile(t *testing.T) {
+	InitModels()
+	request, err := http.NewRequest("GET", "http://localhost/api/profile", nil)
+	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"yasher"}}`
+
+	response := httptest.NewRecorder()
+	_, err = FakeLoginAndAuth(request)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	router := NewRouter()
+	router.ServeHTTP(response, request)
+	result, _ := ioutil.ReadAll(response.Body)
+
+	if strings.TrimSpace(string(result)) != expectedBody {
+		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	}
+
+}
+
+func TestUpdateProfile(t *testing.T) {
+	InitModels()
+	body := strings.NewReader(`{
+		"password" : "qweqwe234234&62342=",
+		"name": "new name" }`)
+	request, err := http.NewRequest("PUT", "http://localhost/api/profile", body)
+	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"new name"}}`
+
+	response := httptest.NewRecorder()
+	user, err := FakeLoginAndAuth(request)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	router := NewRouter()
+	router.ServeHTTP(response, request)
+	result, _ := ioutil.ReadAll(response.Body)
+
+	if strings.TrimSpace(string(result)) != expectedBody {
+		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	}
+	user, _ = GetUserByLogin("fake_user_login")
+	if user.name != "new name" {
+		t.Errorf("Wrong name\n Expected:new name\nGot:%s", user.name)
+	}
+	if user.passwordHash != "qweqwe234234&62342=" {
+		t.Errorf("Wrong passeord hash\n Expected:qweqwe234234&62342=\nGot:%s", user.passwordHash)
+	}
+}
+
+func TestGetLeaderboard(t *testing.T) {
+	InitModels()
+
+	for i := 1; i <= 27; i++ {
+		NewUser("npc_"+string(i), "12345", "mail"+string(i)+"@mail.ru", "Nick #"+string(i))
+	}
+	request, err := http.NewRequest("GET", "http://localhost/api/leaderbord/31", nil)
+	expectedBody := `NOT IMPLEMENTED!` //TODO: Implement this
+
+	response := httptest.NewRecorder()
+	_, err = FakeLoginAndAuth(request)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	router := NewRouter()
+	router.ServeHTTP(response, request)
+	result, _ := ioutil.ReadAll(response.Body)
+
+	if strings.TrimSpace(string(result)) != expectedBody {
+		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	}
+
+}
+
+func TestGetLeaderboardTooBigPage(t *testing.T) {
+	InitModels()
+
+	for i := 1; i <= 27; i++ {
+		NewUser("npc_"+string(i), "12345", "mail"+string(i)+"@mail.ru", "Nick #"+string(i))
+	}
+	request, err := http.NewRequest("GET", "http://localhost/api/leaderbord/31", nil)
+	expectedBody := `{"type":"uslist","status":"error","payload":{"message":"Not enough users"}}`
+
+	response := httptest.NewRecorder()
+	_, err = FakeLoginAndAuth(request)
+
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	router := NewRouter()
+	router.ServeHTTP(response, request)
+	result, _ := ioutil.ReadAll(response.Body)
+
+	if strings.TrimSpace(string(result)) != expectedBody {
+		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	}
+
 }
