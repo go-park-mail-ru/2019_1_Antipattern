@@ -8,11 +8,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func main() {
-	users = make(map[string]User)
-	uuidUserIndex = make(map[uint32]string)
-	sessions = make(map[string]Session)
-
+func NewRouter() *mux.Router {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin, false)).Methods("POST")
@@ -34,6 +30,10 @@ func main() {
 			"..", "2019_1_DeathPacito_front",
 			"public", "index.html"))
 	})
+	return r
+}
+func main() {
+	InitModels()
 
-	log.Fatal(http.ListenAndServe(":80", r))
+	log.Fatal(http.ListenAndServe(":80", NewRouter()))
 }

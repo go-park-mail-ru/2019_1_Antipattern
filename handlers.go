@@ -154,14 +154,14 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
 func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session) {
 	user := session.user
 	response := Response{
-		Type: "usinfo",
+		Type:   "usinfo",
 		Status: "success",
 	}
 
 	response.Payload = UserDataPayload{
-		Login: user.login,
-		Email: user.email,
-		Name: user.name,
+		Login:      user.login,
+		Email:      user.email,
+		Name:       user.name,
 		AvatarPath: user.name,
 	}
 
@@ -190,7 +190,7 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) 
 	user.Save()
 
 	response := Response{
-		Type: "usinfo",
+		Type:   "usinfo",
 		Status: "success",
 	}
 
@@ -208,11 +208,11 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) 
 func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 	body := r.Body
 	defer body.Close()
-
 	byteBody, err := ioutil.ReadAll(body)
 	if err != nil {
 		return err
 	}
+
 	marshaler.UnmarshalJSON(byteBody)
 
 	if err != nil {

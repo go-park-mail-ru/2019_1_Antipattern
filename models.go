@@ -2,8 +2,9 @@ package main
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"sort"
+
+	"github.com/google/uuid"
 )
 
 type Model interface {
@@ -62,7 +63,7 @@ func GetUsers(count, page int) ([]User, error) {
 
 	//var max uint = uint(math.Max(float64(count*page), float64(len(users))))
 
-	max := count*page
+	max := count * page
 	if max > len(users) {
 		max = len(users)
 	}
@@ -129,4 +130,10 @@ func Auth(login string, password string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func InitModels() {
+	users = make(map[string]User)
+	uuidUserIndex = make(map[uint32]string)
+	sessions = make(map[string]Session)
 }
