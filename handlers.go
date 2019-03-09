@@ -8,8 +8,10 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
@@ -127,33 +129,31 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session
 }
 
 func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
-	request := &LeaderboardRequest{}
-	err := getRequest(request, r)
-	if err != nil {
-		fmt.Printf("An error occured: %v\nRequest: %v", err, request)
-		return
-	}
-	////
-	fmt.Println(*request)
-
 	response := Response{
 		Type: "uslist",
 	}
+	page, err := strconv.Atoi(mux.Vars(r)["page"])
 
-	userSlice, err := GetUsers(request.Count, request.Page)
-	fmt.Println(userSlice)
 	if err != nil {
 		response.Status = "error"
 		response.Payload = ErrorPayload{
-			Message: "Not enough users",
+			Message: "Wrong request",
 		}
 	} else {
-		response.Status = "success"
-		response.Payload = UsersPayload{
-			Users: userSlice,
+		userSlice, err := GetUsers(10, page)
+
+		if err != nil {
+			response.Status = "error"
+			response.Payload = ErrorPayload{
+				Message: "Not enough users",
+			}
+		} else {
+			response.Status = "success"
+			response.Payload = UsersPayload{
+				Users: userSlice,
+			}
 		}
 	}
-
 	byteResponse, _ := response.MarshalJSON()
 	w.Write(byteResponse)
 }
@@ -161,15 +161,15 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
 func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session) {
 	user := session.user
 	response := Response{
-		Type: "usinfo",
+		Type:   "usinfo",
 		Status: "success",
 	}
 
 	response.Payload = UserDataPayload{
-		Login: user.login,
-		Email: user.email,
-		Name: user.name,
-		AvatarPath: user.name,
+		Login:      user.login,
+		Email:      user.email,
+		Name:       user.name,
+		AvatarPath: user.avatar,
 	}
 
 	byteResponse, _ := response.MarshalJSON()
@@ -196,13 +196,13 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) 
 	}
 
 	if userData.Password != "" {
-		user.name = userData.Password
+		user.passwordHash = userData.Password
 	}
 
 	user.Save()
 
 	response := Response{
-		Type: "usinfo",
+		Type:   "usinfo",
 		Status: "success",
 	}
 
@@ -220,12 +220,12 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) 
 func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 	body := r.Body
 	defer body.Close()
-
 	byteBody, err := ioutil.ReadAll(body)
 	fmt.Printf("%s\n",string(byteBody))
 	if err != nil {
 		return err
 	}
+
 	marshaler.UnmarshalJSON(byteBody)
 
 	if err != nil {

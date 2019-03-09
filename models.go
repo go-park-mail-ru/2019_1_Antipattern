@@ -2,8 +2,9 @@ package main
 
 import (
 	"errors"
-	"github.com/google/uuid"
 	"sort"
+
+	"github.com/google/uuid"
 )
 
 type Model interface {
@@ -53,6 +54,22 @@ func GetUser(uuid uint32) (*User, error) {
 	return &user, nil
 }
 
+func GetUserByLogin(login string) (*User, error) {
+	user, exists := users[login]
+	if !exists {
+		return nil, errors.New("wrong login")
+	}
+
+	return &user, nil
+}
+
+func GetSession(id string) (*Session, error) {
+	session, exists := sessions[id]
+	if !exists {
+		return nil, errors.New("Wrong sid")
+	}
+	return &session, nil
+}
 func GetUsers(count, page int) ([]User, error) {
 	// Placeholder-like yet
 	min := count*(page-1) + 1
@@ -62,7 +79,7 @@ func GetUsers(count, page int) ([]User, error) {
 
 	//var max uint = uint(math.Max(float64(count*page), float64(len(users))))
 
-	max := count*page
+	max := count * page
 	if max > len(users) {
 		max = len(users)
 	}
@@ -97,7 +114,6 @@ func NewSession() *Session {
 		sid:  id,
 		user: nil,
 	}
-
 	sessions[id] = session
 	return &session
 }
@@ -145,4 +161,10 @@ func Auth(login string, password string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func InitModels() {
+	users = make(map[string]User)
+	uuidUserIndex = make(map[uint32]string)
+	sessions = make(map[string]Session)
 }
