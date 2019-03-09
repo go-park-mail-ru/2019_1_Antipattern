@@ -16,17 +16,20 @@ import (
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 	userData := &UsrRequest{}
+	response := Response{
+		Type: "log",
+	}
+
 	err := getRequest(userData, r)
 	if err != nil {
-		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
-		return
-	}
-	////
-	//fmt.Println(*userData)
+		response.Status = "error"
+		response.Payload = ErrorPayload{
+			Message: "invalid JSON request",
+		}
 
-	response := Response{
-		Type:    "log",
-		Payload: nil,
+		byteResponse, _ := response.MarshalJSON()
+		w.Write(byteResponse)
+		return
 	}
 
 	if session.user != nil {
@@ -37,7 +40,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 			wrong := err.Error()
 			response.Status = "error"
 			response.Payload = ErrorPayload{
-				Message: "Incorrect" + wrong,
+				Message: "incorrect" + wrong,
 				Field:   wrong,
 			}
 		} else {
@@ -74,7 +77,6 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		response.Status = "error"
 		response.Payload = ErrorPayload{
 			Message: "invalid JSON request",
-			Field:   "-",			// TODO: check what field caused the problem
 		}
 
 		byteResponse, _ := response.MarshalJSON()
@@ -83,8 +85,6 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 	}
 	////
 	//fmt.Println(*userData)
-
-
 
 	user, err := NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
 	if err == nil {
@@ -98,9 +98,16 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		}
 	} else {
 		response.Status = "error"
-		response.Payload = ErrorPayload{
-			Message: err.Error(),
-			Field:   "login",			// TODO: check what field caused the problem
+		if err.Error() == "user already exists" {
+			response.Payload = ErrorPayload{
+				Message: err.Error(),
+				Field:   "login",
+			}
+		} else {
+			response.Payload = ErrorPayload{
+				Message: "missing " + err.Error(),
+				Field:   err.Error(),
+			}
 		}
 	}
 
@@ -195,7 +202,6 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session)
 
 func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) {
 	//w.Header().Set("Content-type")
-
 
 	userData := &UsrRequest{}
 	err := getRequest(userData, r)

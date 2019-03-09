@@ -125,19 +125,19 @@ func NewSession() *Session {
 
 func NewUser(login string, password string, email string, name string) (*User, error) {
 	if login == "" {
-		return nil, errors.New("empty login")
+		return nil, errors.New("login")
 	}
 
 	if password == "" {
-		return nil, errors.New("empty password")
+		return nil, errors.New("password")
 	}
 
 	if email == "" {
-		return nil, errors.New("empty email")
+		return nil, errors.New("email")
 	}
 
 	if name == "" {
-		return nil, errors.New("empty name")
+		return nil, errors.New("name")
 	}
 
 	if _, ok := users[login]; ok {
