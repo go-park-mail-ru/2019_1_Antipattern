@@ -16,20 +16,15 @@ import (
 
 func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 	userData := &UsrRequest{}
-	response := Response{
-		Type: "log",
-	}
 
 	err := getRequest(userData, r)
 	if err != nil {
-		response.Status = "error"
-		response.Payload = ErrorPayload{
-			Message: "invalid JSON request",
-		}
-
-		byteResponse, _ := response.MarshalJSON()
-		w.Write(byteResponse)
+		w.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	response := Response{
+		Type: "reg",
 	}
 
 	if session.user != nil {
@@ -68,20 +63,15 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 // Writes status json to response
 func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 	userData := &UsrRequest{}
-	response := Response{
-		Type: "reg",
-	}
 
 	err := getRequest(userData, r)
 	if err != nil {
-		response.Status = "error"
-		response.Payload = ErrorPayload{
-			Message: "invalid JSON request",
-		}
-
-		byteResponse, _ := response.MarshalJSON()
-		w.Write(byteResponse)
+		w.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	response := Response{
+		Type: "reg",
 	}
 
 	user, err := NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
@@ -200,9 +190,10 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session)
 
 func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) {
 	userData := &UsrRequest{}
+
 	err := getRequest(userData, r)
 	if err != nil {
-		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
