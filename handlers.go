@@ -83,8 +83,6 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		w.Write(byteResponse)
 		return
 	}
-	////
-	//fmt.Println(*userData)
 
 	user, err := NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
 	if err == nil {
@@ -201,16 +199,12 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session)
 }
 
 func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) {
-	//w.Header().Set("Content-type")
-
 	userData := &UsrRequest{}
 	err := getRequest(userData, r)
 	if err != nil {
 		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
 		return
 	}
-	////
-	//fmt.Println(*userData)
 
 	user := session.user
 
@@ -244,7 +238,6 @@ func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 	body := r.Body
 	defer body.Close()
 	byteBody, err := ioutil.ReadAll(body)
-	//fmt.Printf("%s\n",string(byteBody))
 	if err != nil {
 		return err
 	}
