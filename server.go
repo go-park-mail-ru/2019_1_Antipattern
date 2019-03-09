@@ -11,12 +11,12 @@ import (
 func NewRouter() *mux.Router {
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin, false)).Methods("POST")
-	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister, false)).Methods("POST")
-	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload, true)).Methods("POST")
-	r.HandleFunc("/api/profile", SessionMiddleware(HandleUpdateUser, true)).Methods("PUT")
-	r.HandleFunc("/api/profile", SessionMiddleware(HandleGetUserData, true)).Methods("GET")
-	r.HandleFunc("/api/leaderbord/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, true)).Methods("GET")
+	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin, false)).Methods("POST")						// check, но изменить ошибки
+	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister, false)).Methods("POST")					// принимает неполные запросыFFF
+	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload, true)).Methods("POST")			//
+	r.HandleFunc("/api/profile", SessionMiddleware(HandleUpdateUser, true)).Methods("PUT")					//
+	r.HandleFunc("/api/profile", SessionMiddleware(HandleGetUserData, true)).Methods("GET")					// хз вроде норм
+	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, true)).Methods("GET")	// -
 
 	staticServer := http.FileServer(http.Dir(
 		path.Join("..", "2019_1_DeathPacito_front", "public")))
