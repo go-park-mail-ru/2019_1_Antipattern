@@ -151,15 +151,15 @@ func easyjson6a93d021DecodeTest1(in *jlexer.Lexer, out *UsersPayload) {
 				in.Delim('[')
 				if out.Users == nil {
 					if !in.IsDelim(']') {
-						out.Users = make([]User, 0, 1)
+						out.Users = make([]UserDataPayload, 0, 1)
 					} else {
-						out.Users = []User{}
+						out.Users = []UserDataPayload{}
 					}
 				} else {
 					out.Users = (out.Users)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v1 User
+					var v1 UserDataPayload
 					(v1).UnmarshalEasyJSON(in)
 					out.Users = append(out.Users, v1)
 					in.WantComma()
@@ -334,66 +334,7 @@ func (v *UserDataPayload) UnmarshalJSON(data []byte) error {
 func (v *UserDataPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson6a93d021DecodeTest2(l, v)
 }
-func easyjson6a93d021DecodeTest3(in *jlexer.Lexer, out *User) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson6a93d021EncodeTest3(out *jwriter.Writer, in User) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v User) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjson6a93d021EncodeTest3(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v User) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6a93d021EncodeTest3(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *User) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjson6a93d021DecodeTest3(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *User) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6a93d021DecodeTest3(l, v)
-}
-func easyjson6a93d021DecodeTest4(in *jlexer.Lexer, out *Response) {
+func easyjson6a93d021DecodeTest3(in *jlexer.Lexer, out *Response) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -434,7 +375,7 @@ func easyjson6a93d021DecodeTest4(in *jlexer.Lexer, out *Response) {
 		in.Consumed()
 	}
 }
-func easyjson6a93d021EncodeTest4(out *jwriter.Writer, in Response) {
+func easyjson6a93d021EncodeTest3(out *jwriter.Writer, in Response) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -480,27 +421,27 @@ func easyjson6a93d021EncodeTest4(out *jwriter.Writer, in Response) {
 // MarshalJSON supports json.Marshaler interface
 func (v Response) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6a93d021EncodeTest4(&w, v)
+	easyjson6a93d021EncodeTest3(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Response) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6a93d021EncodeTest4(w, v)
+	easyjson6a93d021EncodeTest3(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Response) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6a93d021DecodeTest4(&r, v)
+	easyjson6a93d021DecodeTest3(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Response) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6a93d021DecodeTest4(l, v)
+	easyjson6a93d021DecodeTest3(l, v)
 }
-func easyjson6a93d021DecodeTest5(in *jlexer.Lexer, out *LeaderboardRequest) {
+func easyjson6a93d021DecodeTest4(in *jlexer.Lexer, out *LeaderboardRequest) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -533,7 +474,7 @@ func easyjson6a93d021DecodeTest5(in *jlexer.Lexer, out *LeaderboardRequest) {
 		in.Consumed()
 	}
 }
-func easyjson6a93d021EncodeTest5(out *jwriter.Writer, in LeaderboardRequest) {
+func easyjson6a93d021EncodeTest4(out *jwriter.Writer, in LeaderboardRequest) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -563,27 +504,27 @@ func easyjson6a93d021EncodeTest5(out *jwriter.Writer, in LeaderboardRequest) {
 // MarshalJSON supports json.Marshaler interface
 func (v LeaderboardRequest) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6a93d021EncodeTest5(&w, v)
+	easyjson6a93d021EncodeTest4(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v LeaderboardRequest) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6a93d021EncodeTest5(w, v)
+	easyjson6a93d021EncodeTest4(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *LeaderboardRequest) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6a93d021DecodeTest5(&r, v)
+	easyjson6a93d021DecodeTest4(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *LeaderboardRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6a93d021DecodeTest5(l, v)
+	easyjson6a93d021DecodeTest4(l, v)
 }
-func easyjson6a93d021DecodeTest6(in *jlexer.Lexer, out *ErrorPayload) {
+func easyjson6a93d021DecodeTest5(in *jlexer.Lexer, out *ErrorPayload) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -616,7 +557,7 @@ func easyjson6a93d021DecodeTest6(in *jlexer.Lexer, out *ErrorPayload) {
 		in.Consumed()
 	}
 }
-func easyjson6a93d021EncodeTest6(out *jwriter.Writer, in ErrorPayload) {
+func easyjson6a93d021EncodeTest5(out *jwriter.Writer, in ErrorPayload) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -646,23 +587,23 @@ func easyjson6a93d021EncodeTest6(out *jwriter.Writer, in ErrorPayload) {
 // MarshalJSON supports json.Marshaler interface
 func (v ErrorPayload) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson6a93d021EncodeTest6(&w, v)
+	easyjson6a93d021EncodeTest5(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v ErrorPayload) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson6a93d021EncodeTest6(w, v)
+	easyjson6a93d021EncodeTest5(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *ErrorPayload) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson6a93d021DecodeTest6(&r, v)
+	easyjson6a93d021DecodeTest5(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *ErrorPayload) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson6a93d021DecodeTest6(l, v)
+	easyjson6a93d021DecodeTest5(l, v)
 }

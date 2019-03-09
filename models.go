@@ -70,10 +70,11 @@ func GetSession(id string) (*Session, error) {
 	}
 	return &session, nil
 }
+
 func GetUsers(count, page int) ([]User, error) {
 	// Placeholder-like yet
-	min := count*(page-1) + 1
-	if min > len(users) {
+	min := count*(page-1)
+	if min >= len(users) {
 		return nil, errors.New("not enough users")
 	}
 
@@ -90,7 +91,7 @@ func GetUsers(count, page int) ([]User, error) {
 	}
 	sort.Strings(keySlice)
 
-	userSlice := make([]User, len(users), len(users))
+	userSlice := make([]User, 0, len(users))
 	for _, v := range keySlice {
 		userSlice = append(userSlice, users[v])
 	}
@@ -102,6 +103,7 @@ func (session *Session) Delete() error {
 	delete(sessions, session.sid)
 	return nil
 }
+
 func (user *User) Delete() error {
 	delete(uuidUserIndex, user.uuid)
 	delete(users, user.login)

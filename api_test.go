@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -263,10 +264,10 @@ func TestGetLeaderboard(t *testing.T) {
 	InitModels()
 
 	for i := 1; i <= 27; i++ {
-		NewUser("npc_"+string(i), "12345", "mail"+string(i)+"@mail.ru", "Nick #"+string(i))
+		NewUser("npc_"+strconv.Itoa(i), "12345", "mail"+strconv.Itoa(i)+"@mail.ru", "Nick #"+strconv.Itoa(i))
 	}
 	request, err := http.NewRequest("GET", "http://localhost/api/leaderboard/1", nil)
-	expectedBody := `NOT IMPLEMENTED!` //TODO: Implement this
+	expectedBody := `{"type":"uslist","status":"success","payload":{"users":[{"name":"yasher"},{"name":"Nick #1"},{"name":"Nick #10"},{"name":"Nick #11"},{"name":"Nick #12"},{"name":"Nick #13"},{"name":"Nick #14"},{"name":"Nick #15"},{"name":"Nick #16"},{"name":"Nick #17"}]}}`
 
 	response := httptest.NewRecorder()
 	_, err = FakeLoginAndAuth(request)

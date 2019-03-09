@@ -35,5 +35,5 @@ func NewRouter() *mux.Router {
 func main() {
 	InitModels()
 
-	log.Fatal(http.ListenAndServe(":80", NewRouter()))
+	log.Fatal(http.ListenAndServe(":8080", NewRouter()))
 }

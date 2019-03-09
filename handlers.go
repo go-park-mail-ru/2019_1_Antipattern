@@ -22,7 +22,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 		return
 	}
 	////
-	fmt.Println(*userData)
+	//fmt.Println(*userData)
 
 	response := Response{
 		Type:    "log",
@@ -71,7 +71,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		return
 	}
 	////
-	fmt.Println(*userData)
+	//fmt.Println(*userData)
 
 	response := Response{
 		Type: "reg",
@@ -149,8 +149,16 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
 			}
 		} else {
 			response.Status = "success"
+
+			dataSlice := make([]UserDataPayload, 0, len(userSlice))
+			for _, user := range userSlice {
+				dataSlice = append(dataSlice, UserDataPayload{
+					Name: user.name,
+				})
+			}
+
 			response.Payload = UsersPayload{
-				Users: userSlice,
+				Users: dataSlice,
 			}
 		}
 	}
@@ -187,7 +195,7 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) 
 		return
 	}
 	////
-	fmt.Println(*userData)
+	//fmt.Println(*userData)
 
 	user := session.user
 
@@ -221,7 +229,7 @@ func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 	body := r.Body
 	defer body.Close()
 	byteBody, err := ioutil.ReadAll(body)
-	fmt.Printf("%s\n",string(byteBody))
+	//fmt.Printf("%s\n",string(byteBody))
 	if err != nil {
 		return err
 	}
