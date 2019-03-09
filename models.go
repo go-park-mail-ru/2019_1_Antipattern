@@ -103,6 +103,22 @@ func NewSession() *Session {
 }
 
 func NewUser(login string, password string, email string, name string) (*User, error) {
+	if login == "" {
+		return nil, errors.New("empty login")
+	}
+
+	if password == "" {
+		return nil, errors.New("empty password")
+	}
+
+	if email == "" {
+		return nil, errors.New("empty email")
+	}
+
+	if name == "" {
+		return nil, errors.New("empty name")
+	}
+
 	if _, ok := users[login]; ok {
 		return nil, errors.New("user already exists " + login)
 	}

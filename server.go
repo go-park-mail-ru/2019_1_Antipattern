@@ -15,12 +15,12 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin, false)).Methods("POST")
-	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister, false)).Methods("POST")
-	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload, true)).Methods("POST")
-	r.HandleFunc("/api/profile", SessionMiddleware(HandleUpdateUser, true)).Methods("PUT")
-	r.HandleFunc("/api/profile", SessionMiddleware(HandleGetUserData, true)).Methods("GET")
-	r.HandleFunc("/api/leaderbord/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, true)).Methods("GET")
+	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin, false)).Methods("POST")						// check, но изменить ошибки
+	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister, false)).Methods("POST")					// принимает неполные запросыFFF
+	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload, true)).Methods("POST")			//
+	r.HandleFunc("/api/profile", SessionMiddleware(HandleUpdateUser, true)).Methods("PUT")					//
+	r.HandleFunc("/api/profile", SessionMiddleware(HandleGetUserData, true)).Methods("GET")					// хз вроде норм
+	r.HandleFunc("/api/leaderbord/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, true)).Methods("GET")	// -
 	//staticServer := http.FileServer(http.Dir("../2019_1_DeathPacito_front/public"))
 	staticServer := http.FileServer(http.Dir("../2019_1_DeathPacito_front/public/"))
 	mediaServer := http.FileServer(http.Dir("media/"))
@@ -33,5 +33,5 @@ func main() {
 		http.ServeFile(w, r, "../2019_1_DeathPacito_front/public/index.html")
 	})
 
-	log.Fatal(http.ListenAndServe(":80", r))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }

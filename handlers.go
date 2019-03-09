@@ -19,6 +19,8 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
 		return
 	}
+	////
+	fmt.Println(*userData)
 
 	response := Response{
 		Type:    "log",
@@ -66,6 +68,8 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
 		return
 	}
+	////
+	fmt.Println(*userData)
 
 	response := Response{
 		Type: "reg",
@@ -129,12 +133,15 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
 		fmt.Printf("An error occured: %v\nRequest: %v", err, request)
 		return
 	}
+	////
+	fmt.Println(*request)
 
 	response := Response{
 		Type: "uslist",
 	}
 
 	userSlice, err := GetUsers(request.Count, request.Page)
+	fmt.Println(userSlice)
 	if err != nil {
 		response.Status = "error"
 		response.Payload = ErrorPayload{
@@ -170,12 +177,17 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session)
 }
 
 func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) {
+	//w.Header().Set("Content-type")
+
+
 	userData := &UsrRequest{}
 	err := getRequest(userData, r)
 	if err != nil {
 		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
 		return
 	}
+	////
+	fmt.Println(*userData)
 
 	user := session.user
 
@@ -210,6 +222,7 @@ func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 	defer body.Close()
 
 	byteBody, err := ioutil.ReadAll(body)
+	fmt.Printf("%s\n",string(byteBody))
 	if err != nil {
 		return err
 	}
