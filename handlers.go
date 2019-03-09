@@ -24,7 +24,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 	}
 
 	response := Response{
-		Type: "reg",
+		Type: "log",
 	}
 
 	if session.user != nil {
@@ -35,7 +35,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 			wrong := err.Error()
 			response.Status = "error"
 			response.Payload = ErrorPayload{
-				Message: "incorrect" + wrong,
+				Message: "incorrect " + wrong,
 				Field:   wrong,
 			}
 		} else {
