@@ -92,7 +92,7 @@ func TestRegisterAlreadyRegistered(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"reg","status":"error","payload":{"message":"User already exists","field":"login"}}`
+	expectedBody := `{"type":"reg","status":"error","payload":{"message":"user already exists","field":"login"}}`
 
 	w := httptest.NewRecorder()
 	router := NewRouter()
@@ -293,7 +293,7 @@ func TestGetLeaderboardTooBigPage(t *testing.T) {
 		NewUser("npc_"+string(i), "12345", "mail"+string(i)+"@mail.ru", "Nick #"+string(i))
 	}
 	request, err := http.NewRequest("GET", "http://localhost/api/leaderboard/31", nil)
-	expectedBody := `{"type":"uslist","status":"error","payload":{"message":"Not enough users"}}`
+	expectedBody := `{"type":"uslist","status":"error","payload":{"message":"not enough users"}}`
 
 	response := httptest.NewRecorder()
 	_, err = FakeLoginAndAuth(request)

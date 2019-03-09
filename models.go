@@ -72,7 +72,10 @@ func GetSession(id string) (*Session, error) {
 }
 
 func GetUsers(count, page int) ([]User, error) {
-	// Placeholder-like yet
+	if page < 1 {
+		return nil, errors.New("invalid page number")
+	}
+
 	min := count*(page-1)
 	if min >= len(users) {
 		return nil, errors.New("not enough users")
@@ -138,7 +141,7 @@ func NewUser(login string, password string, email string, name string) (*User, e
 	}
 
 	if _, ok := users[login]; ok {
-		return nil, errors.New("user already exists " + login)
+		return nil, errors.New("user already exists")
 	}
 	user := User{
 		uuid:         uuid.New().ID(),

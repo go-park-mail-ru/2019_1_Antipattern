@@ -65,17 +65,26 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 // Writes status json to response
 func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 	userData := &UsrRequest{}
+	response := Response{
+		Type: "reg",
+	}
+
 	err := getRequest(userData, r)
 	if err != nil {
-		fmt.Printf("An error occured: %v\nRequest: %v", err, userData)
+		response.Status = "error"
+		response.Payload = ErrorPayload{
+			Message: "invalid JSON request",
+			Field:   "-",			// TODO: check what field caused the problem
+		}
+
+		byteResponse, _ := response.MarshalJSON()
+		w.Write(byteResponse)
 		return
 	}
 	////
 	//fmt.Println(*userData)
 
-	response := Response{
-		Type: "reg",
-	}
+
 
 	user, err := NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
 	if err == nil {
@@ -90,8 +99,8 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 	} else {
 		response.Status = "error"
 		response.Payload = ErrorPayload{
-			Message: "User already exists",
-			Field:   "login",
+			Message: err.Error(),
+			Field:   "login",			// TODO: check what field caused the problem
 		}
 	}
 
@@ -145,7 +154,7 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
 		if err != nil {
 			response.Status = "error"
 			response.Payload = ErrorPayload{
-				Message: "Not enough users",
+				Message: err.Error(),
 			}
 		} else {
 			response.Status = "success"
@@ -234,7 +243,7 @@ func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 		return err
 	}
 
-	marshaler.UnmarshalJSON(byteBody)
+	err = marshaler.UnmarshalJSON(byteBody)
 
 	if err != nil {
 		return err
