@@ -267,7 +267,7 @@ func easyjson6a93d021DecodeTest2(in *jlexer.Lexer, out *UserDataPayload) {
 		case "avatar":
 			out.AvatarPath = string(in.String())
 		case "score":
-			out.Score = string(in.String())
+			out.Score = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -330,7 +330,7 @@ func easyjson6a93d021EncodeTest2(out *jwriter.Writer, in UserDataPayload) {
 		} else {
 			out.RawString(prefix)
 		}
-		out.String(string(in.Score))
+		out.Int(int(in.Score))
 	}
 	out.RawByte('}')
 }
