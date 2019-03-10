@@ -322,7 +322,7 @@ func easyjson6a93d021EncodeTest2(out *jwriter.Writer, in UserDataPayload) {
 		}
 		out.String(string(in.AvatarPath))
 	}
-	if in.Score != "" {
+	{
 		const prefix string = ",\"score\":"
 		if first {
 			first = false
