@@ -166,6 +166,8 @@ func easyjson6a93d021DecodeTest1(in *jlexer.Lexer, out *UsersPayload) {
 				}
 				in.Delim(']')
 			}
+		case "count":
+			out.Count = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -200,6 +202,16 @@ func easyjson6a93d021EncodeTest1(out *jwriter.Writer, in UsersPayload) {
 			}
 			out.RawByte(']')
 		}
+	}
+	{
+		const prefix string = ",\"count\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int(int(in.Count))
 	}
 	out.RawByte('}')
 }
