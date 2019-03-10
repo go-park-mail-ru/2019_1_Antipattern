@@ -160,9 +160,10 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
 					Name: user.name,
 				})
 			}
-
+			count, _ := GetUserCount()
 			response.Payload = UsersPayload{
 				Users: dataSlice,
+				Count: count,
 			}
 		}
 	}
