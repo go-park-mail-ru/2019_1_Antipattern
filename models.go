@@ -19,6 +19,7 @@ type User struct {
 	email        string
 	name         string
 	avatar       string
+	score        int
 }
 
 type Session struct {
@@ -149,6 +150,7 @@ func NewUser(login string, password string, email string, name string) (*User, e
 		passwordHash: password,
 		email:        email,
 		name:         name,
+		score:        0,
 	}
 
 	users[login] = user

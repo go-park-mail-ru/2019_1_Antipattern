@@ -183,6 +183,7 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session)
 		Email:      user.email,
 		Name:       user.name,
 		AvatarPath: user.avatar,
+		Score:      user.score,
 	}
 
 	byteResponse, _ := response.MarshalJSON()

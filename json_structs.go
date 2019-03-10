@@ -16,7 +16,7 @@ type UserDataPayload struct {
 	Email      string `json:"email,omitempty"`
 	Name       string `json:"name,omitempty"`
 	AvatarPath string `json:"avatar,omitempty"`
-	Score      string `json:"score"`
+	Score      int    `json:"score"`
 }
 
 type ErrorPayload struct {
