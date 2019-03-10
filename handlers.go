@@ -106,7 +106,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 }
 
 func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session) {
-	//r.ParseMultipartForm(2 << 21) // 2 mb
+	r.ParseMultipartForm(2 << 21) // 2 mb
 
 	rFile, handler, err := r.FormFile("avatar")
 	if err != nil {
