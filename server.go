@@ -21,7 +21,7 @@ func NewRouter() http.Handler {
 	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload, true)).Methods("POST")        //
 	r.HandleFunc("/api/profile", SessionMiddleware(HandleUpdateUser, true)).Methods("PUT")                 //
 	r.HandleFunc("/api/profile", SessionMiddleware(HandleGetUserData, true)).Methods("GET")                // хз вроде норм
-	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, true)).Methods("GET") // -
+	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, false)).Methods("GET") // -
 
 	staticServer := http.FileServer(http.Dir(
 		path.Join("..", "2019_1_DeathPacito_front", "public")))
