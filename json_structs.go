@@ -8,6 +8,7 @@ type Response struct {
 
 type UsersPayload struct {
 	Users []UserDataPayload `json:"users"`
+	Count int               `json:"count"`
 }
 
 type UserDataPayload struct {
@@ -30,7 +31,6 @@ type UsrRequest struct {
 }
 
 type LeaderboardRequest struct {
-	Count	int `json:"count"`
-	Page 	int `json:"page"`
+	Count int `json:"count"`
+	Page  int `json:"page"`
 }
-

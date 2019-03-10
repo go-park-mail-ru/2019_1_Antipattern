@@ -76,7 +76,7 @@ func GetUsers(count, page int) ([]User, error) {
 		return nil, errors.New("invalid page number")
 	}
 
-	min := count*(page-1)
+	min := count * (page - 1)
 	if min >= len(users) {
 		return nil, errors.New("not enough users")
 	}
@@ -168,6 +168,9 @@ func Auth(login string, password string) (*User, error) {
 	return &user, nil
 }
 
+func GetUserCount() (int, error) {
+	return len(users), nil
+}
 func InitModels() {
 	users = make(map[string]User)
 	uuidUserIndex = make(map[uint32]string)
