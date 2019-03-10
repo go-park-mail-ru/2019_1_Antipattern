@@ -266,6 +266,8 @@ func easyjson6a93d021DecodeTest2(in *jlexer.Lexer, out *UserDataPayload) {
 			out.Name = string(in.String())
 		case "avatar":
 			out.AvatarPath = string(in.String())
+		case "score":
+			out.Score = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -319,6 +321,16 @@ func easyjson6a93d021EncodeTest2(out *jwriter.Writer, in UserDataPayload) {
 			out.RawString(prefix)
 		}
 		out.String(string(in.AvatarPath))
+	}
+	if in.Score != "" {
+		const prefix string = ",\"score\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Score))
 	}
 	out.RawByte('}')
 }
