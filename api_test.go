@@ -150,7 +150,7 @@ func TestLoginWrongPassword(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"log","status":"error","payload":{"message":"Incorrectpassword","field":"password"}}`
+	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect password","field":"password"}}`
 
 	w := httptest.NewRecorder()
 	router := NewRouter()
@@ -179,7 +179,7 @@ func TestLoginWrongLogin(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"log","status":"error","payload":{"message":"Incorrectlogin","field":"login"}}`
+	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect login","field":"login"}}`
 
 	w := httptest.NewRecorder()
 	router := NewRouter()
