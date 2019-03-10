@@ -150,7 +150,7 @@ func NewUser(login string, password string, email string, name string) (*User, e
 		passwordHash: password,
 		email:        email,
 		name:         name,
-		score:        0,
+		score:        20,
 	}
 
 	users[login] = user

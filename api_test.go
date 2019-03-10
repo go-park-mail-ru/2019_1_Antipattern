@@ -52,7 +52,7 @@ func TestRegister(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"reg","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"Gamer #23 @790-_%"}}`
+	expectedBody := `{"type":"reg","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"Gamer #23 @790-_%","score":20}}`
 
 	w := httptest.NewRecorder()
 	router := NewRouter()
@@ -120,7 +120,7 @@ func TestLogin(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"log","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"kek"}}`
+	expectedBody := `{"type":"log","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"kek","score":20}}`
 
 	w := httptest.NewRecorder()
 	router := NewRouter()
@@ -210,7 +210,7 @@ func FakeLoginAndAuth(request *http.Request) (*User, error) {
 func TestGetProfile(t *testing.T) {
 	InitModels()
 	request, err := http.NewRequest("GET", "http://localhost/api/profile", nil)
-	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"yasher"}}`
+	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"yasher","score":20}}`
 
 	response := httptest.NewRecorder()
 	_, err = FakeLoginAndAuth(request)
@@ -235,7 +235,7 @@ func TestUpdateProfile(t *testing.T) {
 		"password" : "qweqwe234234&62342=",
 		"name": "new name" }`)
 	request, err := http.NewRequest("PUT", "http://localhost/api/profile", body)
-	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"new name"}}`
+	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"new name","score":20}}`
 
 	response := httptest.NewRecorder()
 	user, err := FakeLoginAndAuth(request)
@@ -267,7 +267,7 @@ func TestGetLeaderboard(t *testing.T) {
 		NewUser("npc_"+strconv.Itoa(i), "12345", "mail"+strconv.Itoa(i)+"@mail.ru", "Nick #"+strconv.Itoa(i))
 	}
 	request, err := http.NewRequest("GET", "http://localhost/api/leaderboard/1", nil)
-	expectedBody := `{"type":"uslist","status":"success","payload":{"users":[{"name":"yasher"},{"name":"Nick #1"},{"name":"Nick #10"},{"name":"Nick #11"},{"name":"Nick #12"},{"name":"Nick #13"},{"name":"Nick #14"},{"name":"Nick #15"},{"name":"Nick #16"},{"name":"Nick #17"}],"count":28}}`
+	expectedBody := `{"type":"uslist","status":"success","payload":{"users":[{"name":"yasher","score":20},{"name":"Nick #1","score":20},{"name":"Nick #10","score":20},{"name":"Nick #11","score":20},{"name":"Nick #12","score":20},{"name":"Nick #13","score":20},{"name":"Nick #14","score":20},{"name":"Nick #15","score":20},{"name":"Nick #16","score":20},{"name":"Nick #17","score":20}],"count":28}}`
 
 	response := httptest.NewRecorder()
 	_, err = FakeLoginAndAuth(request)

@@ -49,6 +49,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 				Email:      user.email,
 				Name:       user.name,
 				AvatarPath: user.avatar,
+				Score:      user.score,
 			}
 		}
 	}
@@ -83,6 +84,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 			Email:      user.email,
 			Name:       user.name,
 			AvatarPath: user.avatar,
+			Score:      user.score,
 		}
 	} else {
 		response.Status = "error"
@@ -157,7 +159,8 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
 			dataSlice := make([]UserDataPayload, 0, len(userSlice))
 			for _, user := range userSlice {
 				dataSlice = append(dataSlice, UserDataPayload{
-					Name: user.name,
+					Name:  user.name,
+					Score: user.score,
 				})
 			}
 			count, _ := GetUserCount()
@@ -221,6 +224,7 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) 
 		Email:      user.email,
 		Name:       user.name,
 		AvatarPath: user.avatar,
+		Score:      user.score,
 	}
 
 	byteResponse, _ := response.MarshalJSON()
