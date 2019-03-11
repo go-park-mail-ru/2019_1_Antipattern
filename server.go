@@ -10,7 +10,7 @@ import (
 )
 
 func NewRouter() http.Handler {
-	allowOrigins := handlers.AllowedOrigins([]string{"http://kpacubo.xyz", "http://api.kpacubo.xyz", "kpacubo.xyz", "api.kpacubo.xyz"})
+	allowOrigins := handlers.AllowedOrigins([]string{"*"})
 	allowHeaders := handlers.AllowedHeaders([]string{"X-Requested-With"})
 	allowMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
