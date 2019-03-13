@@ -1,30 +1,33 @@
-package main
+package middleware
 
-import "net/http"
+import (
+	"../models"
+	"net/http"
+)
 
-func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *Session), authRequiered bool) http.HandlerFunc {
+func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Session), authRequiered bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("sid")
 		if err != nil {
-			session := NewSession()
+			session := models.NewSession()
 			cookie = &http.Cookie{
 				Name:     "sid",
-				Value:    session.sid,
+				Value:    session.Sid,
 				HttpOnly: true,
 			}
 			http.SetCookie(w, cookie)
 		}
-		session, ok := sessions[cookie.Value]
+		session, ok := models.Sessions[cookie.Value]
 		if !ok {
-			session = *NewSession()
+			session = *models.NewSession()
 			cookie = &http.Cookie{
 				Name:     "sid",
-				Value:    session.sid,
+				Value:    session.Sid,
 				HttpOnly: true,
 			}
 			http.SetCookie(w, cookie)
 		}
-		if authRequiered && session.user == nil {
+		if authRequiered && session.User == nil {
 			w.WriteHeader(http.StatusForbidden)
 			session.Save()
 			return

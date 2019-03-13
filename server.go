@@ -1,27 +1,30 @@
 package main
 
 import (
+	"./handlers"
+	"./models"
+	"./middleware"
 	"log"
 	"net/http"
 	"path"
 
-	"github.com/gorilla/handlers"
+	gHandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func NewRouter() http.Handler {
-	allowOrigins := handlers.AllowedOrigins([]string{"http://kpacubo.xyz", "http://api.kpacubo.xyz"})
-	allowHeaders := handlers.AllowedHeaders([]string{"X-Requested-With"})
-	allowMethods := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
+	allowOrigins := gHandlers.AllowedOrigins([]string{"http://kpacubo.xyz", "http://api.kpacubo.xyz"})
+	allowHeaders := gHandlers.AllowedHeaders([]string{"X-Requested-With"})
+	allowMethods := gHandlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/auth", SessionMiddleware(HandleLogin, false)).Methods("POST")                        // check, но изменить ошибки
-	r.HandleFunc("/api/register", SessionMiddleware(HandleRegister, false)).Methods("POST")                 // принимает неполные запросыFFF
-	r.HandleFunc("/api/upload_avatar", SessionMiddleware(HandleAvatarUpload, true)).Methods("POST")         //
-	r.HandleFunc("/api/profile", SessionMiddleware(HandleUpdateUser, true)).Methods("PUT")                  //
-	r.HandleFunc("/api/profile", SessionMiddleware(HandleGetUserData, true)).Methods("GET")                 // хз вроде норм
-	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", SessionMiddleware(HandleGetUsers, false)).Methods("GET") // -
+	r.HandleFunc("/api/auth", middleware.SessionMiddleware(handlers.HandleLogin, false)).Methods("POST")                        // check, но изменить ошибки
+	r.HandleFunc("/api/register", middleware.SessionMiddleware(handlers.HandleRegister, false)).Methods("POST")                 // принимает неполные запросыFFF
+	r.HandleFunc("/api/upload_avatar", middleware.SessionMiddleware(handlers.HandleAvatarUpload, true)).Methods("POST")         //
+	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleUpdateUser, true)).Methods("PUT")                  //
+	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleGetUserData, true)).Methods("GET")                 // хз вроде норм
+	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", middleware.SessionMiddleware(handlers.HandleGetUsers, false)).Methods("GET") // -
 
 	staticServer := http.FileServer(http.Dir(
 		path.Join("..", "2019_1_DeathPacito_front", "public")))
@@ -30,15 +33,15 @@ func NewRouter() http.Handler {
 	r.PathPrefix("/media").Handler(http.StripPrefix("/media/", mediaServer))
 	r.PathPrefix("/public").Handler(http.StripPrefix("/public/", staticServer))
 
-	r.HandleFunc("/", SessionMiddleware(func(w http.ResponseWriter, r *http.Request, s *Session) {
+	r.HandleFunc("/", middleware.SessionMiddleware(func(w http.ResponseWriter, r *http.Request, s *models.Session) {
 		http.ServeFile(w, r, path.Join(
 			"..", "2019_1_DeathPacito_front",
 			"public", "index.html"))
 	}, false))
-	return handlers.CORS(allowOrigins, allowHeaders, allowMethods)(r)
+	return gHandlers.CORS(allowOrigins, allowHeaders, allowMethods)(r)
 }
 func main() {
-	InitModels()
+	models.InitModels()
 
 	log.Fatal(http.ListenAndServe(":8080", NewRouter()))
 }

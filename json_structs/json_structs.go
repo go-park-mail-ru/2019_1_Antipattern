@@ -1,4 +1,4 @@
-package main
+package json_structs
 
 type Response struct {
 	Type    string      `json:"type"`

@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
@@ -12,10 +12,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+
+	webJson "../json_structs"
+	"../models"
 )
 
-func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
-	userData := &UsrRequest{}
+func HandleLogin(w http.ResponseWriter, r *http.Request, session *models.Session) {
+	userData := &webJson.UsrRequest{}
 
 	err := getRequest(userData, r)
 	if err != nil {
@@ -23,33 +26,33 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 		return
 	}
 
-	response := Response{
+	response := webJson.Response{
 		Type: "log",
 	}
 
-	if session.user != nil {
+	if session.User != nil {
 		response.Status = "success"
 	} else {
-		user, err := Auth(userData.Login, userData.Password)
+		user, err := models.Auth(userData.Login, userData.Password)
 		if err != nil {
 			wrong := err.Error()
 			response.Status = "error"
-			response.Payload = ErrorPayload{
+			response.Payload = webJson.ErrorPayload{
 				Message: "incorrect " + wrong,
 				Field:   wrong,
 			}
 		} else {
-			session.user = user
+			session.User = user
 			response.Status = "success"
 		}
 
 		if response.Status == "success" {
-			response.Payload = UserDataPayload{
-				Login:      user.login,
-				Email:      user.email,
-				Name:       user.name,
-				AvatarPath: user.avatar,
-				Score:      user.score,
+			response.Payload = webJson.UserDataPayload{
+				Login:      user.Login,
+				Email:      user.Email,
+				Name:       user.Name,
+				AvatarPath: user.Avatar,
+				Score:      user.Score,
 			}
 		}
 	}
@@ -62,8 +65,8 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *Session) {
 // request must contain post form:
 // 	login, password, email, name
 // Writes status json to response
-func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
-	userData := &UsrRequest{}
+func HandleRegister(w http.ResponseWriter, r *http.Request, session *models.Session) {
+	userData := &webJson.UsrRequest{}
 
 	err := getRequest(userData, r)
 	if err != nil {
@@ -71,30 +74,30 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 		return
 	}
 
-	response := Response{
+	response := webJson.Response{
 		Type: "reg",
 	}
 
-	user, err := NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
+	user, err := models.NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
 	if err == nil {
-		session.user = user
+		session.User = user
 		response.Status = "success"
-		response.Payload = UserDataPayload{
-			Login:      user.login,
-			Email:      user.email,
-			Name:       user.name,
-			AvatarPath: user.avatar,
-			Score:      user.score,
+		response.Payload = webJson.UserDataPayload{
+			Login:      user.Login,
+			Email:      user.Email,
+			Name:       user.Name,
+			AvatarPath: user.Avatar,
+			Score:      user.Score,
 		}
 	} else {
 		response.Status = "error"
 		if err.Error() == "user already exists" {
-			response.Payload = ErrorPayload{
+			response.Payload = webJson.ErrorPayload{
 				Message: err.Error(),
 				Field:   "login",
 			}
 		} else {
-			response.Payload = ErrorPayload{
+			response.Payload = webJson.ErrorPayload{
 				Message: "missing " + err.Error(),
 				Field:   err.Error(),
 			}
@@ -105,7 +108,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *Session) {
 	w.Write(byteResponse)
 }
 
-func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session) {
+func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.Session) {
 	r.ParseMultipartForm(2 << 21) // 2 mb
 
 	rFile, handler, err := r.FormFile("avatar")
@@ -128,44 +131,44 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *Session
 	defer wFile.Close()
 	io.Copy(wFile, rFile)
 
-	session.user.avatar = filename
-	err = session.user.Save()
+	session.User.Avatar = filename
+	err = session.User.Save()
 	if err == nil {
 		// TODO: write error to response
 	}
 }
 
-func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
-	response := Response{
+func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *models.Session) {
+	response := webJson.Response{
 		Type: "uslist",
 	}
 	page, err := strconv.Atoi(mux.Vars(r)["page"])
 
 	if err != nil {
 		response.Status = "error"
-		response.Payload = ErrorPayload{
+		response.Payload = webJson.ErrorPayload{
 			Message: "Wrong request",
 		}
 	} else {
-		userSlice, err := GetUsers(10, page)
+		userSlice, err := models.GetUsers(10, page)
 
 		if err != nil {
 			response.Status = "error"
-			response.Payload = ErrorPayload{
+			response.Payload = webJson.ErrorPayload{
 				Message: err.Error(),
 			}
 		} else {
 			response.Status = "success"
 
-			dataSlice := make([]UserDataPayload, 0, len(userSlice))
+			dataSlice := make([]webJson.UserDataPayload, 0, len(userSlice))
 			for _, user := range userSlice {
-				dataSlice = append(dataSlice, UserDataPayload{
-					Name:  user.name,
-					Score: user.score,
+				dataSlice = append(dataSlice, webJson.UserDataPayload{
+					Name:  user.Name,
+					Score: user.Score,
 				})
 			}
-			count, _ := GetUserCount()
-			response.Payload = UsersPayload{
+			count, _ := models.GetUserCount()
+			response.Payload = webJson.UsersPayload{
 				Users: dataSlice,
 				Count: count,
 			}
@@ -175,27 +178,27 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *Session) {
 	w.Write(byteResponse)
 }
 
-func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *Session) {
-	user := session.user
-	response := Response{
+func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *models.Session) {
+	user := session.User
+	response := webJson.Response{
 		Type:   "usinfo",
 		Status: "success",
 	}
 
-	response.Payload = UserDataPayload{
-		Login:      user.login,
-		Email:      user.email,
-		Name:       user.name,
-		AvatarPath: user.avatar,
-		Score:      user.score,
+	response.Payload = webJson.UserDataPayload{
+		Login:      user.Login,
+		Email:      user.Email,
+		Name:       user.Name,
+		AvatarPath: user.Avatar,
+		Score:      user.Score,
 	}
 
 	byteResponse, _ := response.MarshalJSON()
 	w.Write(byteResponse)
 }
 
-func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) {
-	userData := &UsrRequest{}
+func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *models.Session) {
+	userData := &webJson.UsrRequest{}
 
 	err := getRequest(userData, r)
 	if err != nil {
@@ -203,29 +206,29 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *Session) 
 		return
 	}
 
-	user := session.user
+	user := session.User
 
 	if userData.Name != "" {
-		user.name = userData.Name
+		user.Name = userData.Name
 	}
 
 	if userData.Password != "" {
-		user.passwordHash = userData.Password
+		user.PasswordHash = userData.Password
 	}
 
 	user.Save()
 
-	response := Response{
+	response := webJson.Response{
 		Type:   "usinfo",
 		Status: "success",
 	}
 
-	response.Payload = UserDataPayload{
-		Login:      user.login,
-		Email:      user.email,
-		Name:       user.name,
-		AvatarPath: user.avatar,
-		Score:      user.score,
+	response.Payload = webJson.UserDataPayload{
+		Login:      user.Login,
+		Email:      user.Email,
+		Name:       user.Name,
+		AvatarPath: user.Avatar,
+		Score:      user.Score,
 	}
 
 	byteResponse, _ := response.MarshalJSON()

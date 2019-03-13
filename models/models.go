@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"errors"
@@ -13,41 +13,41 @@ type Model interface {
 }
 
 type User struct {
-	uuid         uint32
-	login        string
-	passwordHash string
-	email        string
-	name         string
-	avatar       string
-	score        int
+	Uuid         uint32
+	Login        string
+	PasswordHash string
+	Email        string
+	Name         string
+	Avatar       string
+	Score        int
 }
 
 type Session struct {
-	sid  string
-	user *User
+	Sid  string
+	User *User
 }
 
-var users map[string]User
-var uuidUserIndex map[uint32]string
-var sessions map[string]Session
+var Users map[string]User
+var UuidUserIndex map[uint32]string
+var Sessions map[string]Session
 
 func (session *Session) Save() error {
-	sessions[session.sid] = *session
+	Sessions[session.Sid] = *session
 	return nil
 }
 
 func (user *User) Save() error {
-	users[user.login] = *user
+	Users[user.Login] = *user
 	return nil
 }
 
 func GetUser(uuid uint32) (*User, error) {
-	login, exists := uuidUserIndex[uuid]
+	login, exists := UuidUserIndex[uuid]
 	if !exists {
 		return nil, errors.New("wrong uuid")
 	}
 
-	user, ok := users[login]
+	user, ok := Users[login]
 	if !ok {
 		return nil, errors.New("uuid-login match error")
 	}
@@ -56,7 +56,7 @@ func GetUser(uuid uint32) (*User, error) {
 }
 
 func GetUserByLogin(login string) (*User, error) {
-	user, exists := users[login]
+	user, exists := Users[login]
 	if !exists {
 		return nil, errors.New("wrong login")
 	}
@@ -65,7 +65,7 @@ func GetUserByLogin(login string) (*User, error) {
 }
 
 func GetSession(id string) (*Session, error) {
-	session, exists := sessions[id]
+	session, exists := Sessions[id]
 	if !exists {
 		return nil, errors.New("Wrong sid")
 	}
@@ -78,49 +78,49 @@ func GetUsers(count, page int) ([]User, error) {
 	}
 
 	min := count * (page - 1)
-	if min >= len(users) {
+	if min >= len(Users) {
 		return nil, errors.New("not enough users")
 	}
 
 	//var max uint = uint(math.Max(float64(count*page), float64(len(users))))
 
 	max := count * page
-	if max > len(users) {
-		max = len(users)
+	if max > len(Users) {
+		max = len(Users)
 	}
 
-	keySlice := make([]string, 0, len(users))
-	for k := range users {
+	keySlice := make([]string, 0, len(Users))
+	for k := range Users {
 		keySlice = append(keySlice, k)
 	}
 	sort.Strings(keySlice)
 
-	userSlice := make([]User, 0, len(users))
+	userSlice := make([]User, 0, len(Users))
 	for _, v := range keySlice {
-		userSlice = append(userSlice, users[v])
+		userSlice = append(userSlice, Users[v])
 	}
 
 	return userSlice[min:max], nil
 }
 
 func (session *Session) Delete() error {
-	delete(sessions, session.sid)
+	delete(Sessions, session.Sid)
 	return nil
 }
 
 func (user *User) Delete() error {
-	delete(uuidUserIndex, user.uuid)
-	delete(users, user.login)
+	delete(UuidUserIndex, user.Uuid)
+	delete(Users, user.Login)
 	return nil
 }
 
 func NewSession() *Session {
 	id := uuid.New().String()
 	session := Session{
-		sid:  id,
-		user: nil,
+		Sid:  id,
+		User: nil,
 	}
-	sessions[id] = session
+	Sessions[id] = session
 	return &session
 }
 
@@ -141,29 +141,29 @@ func NewUser(login string, password string, email string, name string) (*User, e
 		return nil, errors.New("name")
 	}
 
-	if _, ok := users[login]; ok {
+	if _, ok := Users[login]; ok {
 		return nil, errors.New("user already exists")
 	}
 	user := User{
-		uuid:         uuid.New().ID(),
-		login:        login,
-		passwordHash: password,
-		email:        email,
-		name:         name,
-		score:        20,
+		Uuid:         uuid.New().ID(),
+		Login:        login,
+		PasswordHash: password,
+		Email:        email,
+		Name:         name,
+		Score:        20,
 	}
 
-	users[login] = user
-	uuidUserIndex[user.uuid] = user.login
+	Users[login] = user
+	UuidUserIndex[user.Uuid] = user.Login
 	return &user, nil
 }
 
 func Auth(login string, password string) (*User, error) {
-	user, ok := users[login]
+	user, ok := Users[login]
 	if !ok {
 		return nil, errors.New("login")
 	}
-	if user.passwordHash != password {
+	if user.PasswordHash != password {
 		return nil, errors.New("password")
 	}
 
@@ -171,10 +171,10 @@ func Auth(login string, password string) (*User, error) {
 }
 
 func GetUserCount() (int, error) {
-	return len(users), nil
+	return len(Users), nil
 }
 func InitModels() {
-	users = make(map[string]User)
-	uuidUserIndex = make(map[uint32]string)
-	sessions = make(map[string]Session)
+	Users = make(map[string]User)
+	UuidUserIndex = make(map[uint32]string)
+	Sessions = make(map[string]Session)
 }
