@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -38,6 +40,17 @@ func CheckSessionSetCookie(t *testing.T, user models.User, w *httptest.ResponseR
 		return
 	}
 }
+func SendApiQuery(request *http.Request, expectedBody string) (*httptest.ResponseRecorder, error) {
+	response := httptest.NewRecorder()
+	router := NewRouter()
+	router.ServeHTTP(response, request)
+	result, _ := ioutil.ReadAll(response.Body)
+
+	if strings.TrimSpace(string(result)) != expectedBody {
+		return response, errors.New(fmt.Sprintf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result))
+	}
+	return response, nil
+}
 func TestRegister(t *testing.T) {
 	models.InitModels()
 
@@ -56,14 +69,9 @@ func TestRegister(t *testing.T) {
 	}
 	expectedBody := `{"type":"reg","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"Gamer #23 @790-_%","score":20}}`
 
-	w := httptest.NewRecorder()
-	router := NewRouter()
-	router.ServeHTTP(w, r)
-
-	result, _ := ioutil.ReadAll(w.Body)
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
-		return
+	response, err := SendApiQuery(r, expectedBody)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 	newUser, _ := models.GetUserByLogin("user_login")
 
@@ -72,10 +80,12 @@ func TestRegister(t *testing.T) {
 		t.Errorf("Wrong user in db")
 		return
 	}
-	CheckSessionSetCookie(t, *newUser, w)
+	CheckSessionSetCookie(t, *newUser, response)
 }
 func TestRegisterAlreadyRegistered(t *testing.T) {
 	models.InitModels()
+	expectedBody := `{"type":"reg","status":"error","payload":{"message":"user already exists","field":"login"}}`
+
 	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
 	if err != nil {
 		t.Fatal("Can't create user")
@@ -94,19 +104,14 @@ func TestRegisterAlreadyRegistered(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"reg","status":"error","payload":{"message":"user already exists","field":"login"}}`
 
-	w := httptest.NewRecorder()
-	router := NewRouter()
-	router.ServeHTTP(w, r)
-
-	result, _ := ioutil.ReadAll(w.Body)
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
-		return
+	_, err = SendApiQuery(r, expectedBody)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 }
 func TestLogin(t *testing.T) {
+	expectedBody := `{"type":"log","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"kek","score":20}}`
 	models.InitModels()
 	user, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
 	if err != nil {
@@ -122,22 +127,18 @@ func TestLogin(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"log","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"kek","score":20}}`
 
-	w := httptest.NewRecorder()
-	router := NewRouter()
-	router.ServeHTTP(w, r)
-
-	result, _ := ioutil.ReadAll(w.Body)
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
-		return
+	response, err := SendApiQuery(r, expectedBody)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
-	CheckSessionSetCookie(t, *user, w)
+
+	CheckSessionSetCookie(t, *user, response)
 }
 
 func TestLoginWrongPassword(t *testing.T) {
 	models.InitModels()
+	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect password","field":"password"}}`
 	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
 	if err != nil {
 		t.Fatal("Can't create user")
@@ -152,21 +153,16 @@ func TestLoginWrongPassword(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect password","field":"password"}}`
 
-	w := httptest.NewRecorder()
-	router := NewRouter()
-	router.ServeHTTP(w, r)
-
-	result, _ := ioutil.ReadAll(w.Body)
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
-		return
+	_, err = SendApiQuery(r, expectedBody)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 }
 
 func TestLoginWrongLogin(t *testing.T) {
 	models.InitModels()
+	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect login","field":"login"}}`
 	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
 	if err != nil {
 		t.Fatal("Can't create user")
@@ -181,15 +177,10 @@ func TestLoginWrongLogin(t *testing.T) {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect login","field":"login"}}`
 
-	w := httptest.NewRecorder()
-	router := NewRouter()
-	router.ServeHTTP(w, r)
-
-	result, _ := ioutil.ReadAll(w.Body)
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	_, err = SendApiQuery(r, expectedBody)
+	if err != nil {
+		t.Errorf(err.Error())
 		return
 	}
 }
@@ -213,20 +204,17 @@ func TestGetProfile(t *testing.T) {
 	models.InitModels()
 	request, err := http.NewRequest("GET", "http://localhost/api/profile", nil)
 	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"yasher","score":20}}`
-
-	response := httptest.NewRecorder()
 	_, err = FakeLoginAndAuth(request)
 
 	if err != nil {
 		t.Fatal(err.Error())
+		return
 	}
 
-	router := NewRouter()
-	router.ServeHTTP(response, request)
-	result, _ := ioutil.ReadAll(response.Body)
+	_, err = SendApiQuery(request, expectedBody)
 
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 
 }
@@ -239,26 +227,21 @@ func TestUpdateProfile(t *testing.T) {
 	request, err := http.NewRequest("PUT", "http://localhost/api/profile", body)
 	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"new name","score":20}}`
 
-	response := httptest.NewRecorder()
 	user, err := FakeLoginAndAuth(request)
-
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-
-	router := NewRouter()
-	router.ServeHTTP(response, request)
-	result, _ := ioutil.ReadAll(response.Body)
-
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	_, err = SendApiQuery(request, expectedBody)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
+
 	user, _ = models.GetUserByLogin("fake_user_login")
 	if user.Name != "new name" {
 		t.Errorf("Wrong name\n Expected:new name\nGot:%s", user.Name)
 	}
 	if user.PasswordHash != "qweqwe234234&62342=" {
-		t.Errorf("Wrong passeord hash\n Expected:qweqwe234234&62342=\nGot:%s", user.PasswordHash)
+		t.Errorf("Wrong password hash\n Expected:qweqwe234234&62342=\nGot:%s", user.PasswordHash)
 	}
 }
 
@@ -270,46 +253,36 @@ func TestGetLeaderboard(t *testing.T) {
 	}
 	request, err := http.NewRequest("GET", "http://localhost/api/leaderboard/1", nil)
 	expectedBody := `{"type":"uslist","status":"success","payload":{"users":[{"name":"yasher","score":20},{"name":"Nick #1","score":20},{"name":"Nick #10","score":20},{"name":"Nick #11","score":20},{"name":"Nick #12","score":20},{"name":"Nick #13","score":20},{"name":"Nick #14","score":20},{"name":"Nick #15","score":20},{"name":"Nick #16","score":20},{"name":"Nick #17","score":20}],"count":28}}`
-
-	response := httptest.NewRecorder()
 	_, err = FakeLoginAndAuth(request)
 
 	if err != nil {
 		t.Fatal(err.Error())
 	}
+	_, err = SendApiQuery(request, expectedBody)
 
-	router := NewRouter()
-	router.ServeHTTP(response, request)
-	result, _ := ioutil.ReadAll(response.Body)
-
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 
 }
 
 func TestGetLeaderboardTooBigPage(t *testing.T) {
 	models.InitModels()
+	expectedBody := `{"type":"uslist","status":"error","payload":{"message":"not enough users"}}`
 
 	for i := 1; i <= 27; i++ {
 		models.NewUser("npc_"+string(i), "12345", "mail"+string(i)+"@mail.ru", "Nick #"+string(i))
 	}
 	request, err := http.NewRequest("GET", "http://localhost/api/leaderboard/31", nil)
-	expectedBody := `{"type":"uslist","status":"error","payload":{"message":"not enough users"}}`
 
-	response := httptest.NewRecorder()
 	_, err = FakeLoginAndAuth(request)
-
 	if err != nil {
 		t.Fatal(err.Error())
 	}
 
-	router := NewRouter()
-	router.ServeHTTP(response, request)
-	result, _ := ioutil.ReadAll(response.Body)
-
-	if strings.TrimSpace(string(result)) != expectedBody {
-		t.Errorf("Wrong result\n Expected:%s\nGot:%s", expectedBody, result)
+	_, err = SendApiQuery(request, expectedBody)
+	if err != nil {
+		t.Errorf(err.Error())
 	}
 
 }
