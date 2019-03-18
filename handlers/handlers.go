@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
+	_ "fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -109,33 +109,52 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *models.Sess
 }
 
 func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.Session) {
+	user := session.User
+	response := webJson.Response{
+		Type: "usinfo",
+	}
 	r.ParseMultipartForm(2 << 21) // 2 mb
 
 	rFile, handler, err := r.FormFile("avatar")
 	if err != nil {
-		// TODO: write error to response
-		fmt.Println(err)
-		return
-	}
-	defer rFile.Close()
-	//fmt.Fprintf(w, "%v", handler.Header)
-	filename := filepath.Join(filepath.Join("media", "avatar",
-		uuid.New().String()+handler.Filename))
+		response.Status = "error"
+		response.Payload = webJson.ErrorPayload{
+			Message: "Wrong request",
+			Field:   "avatar",
+		}
+	} else {
+		defer rFile.Close()
+		//fmt.Fprintf(w, "%v", handler.Header)
+		filename := filepath.Join(filepath.Join("media", "avatar",
+			uuid.New().String()+handler.Filename))
 
-	wFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		// TODO: write error to response
-		fmt.Println(err)
-		return
-	}
-	defer wFile.Close()
-	io.Copy(wFile, rFile)
+		wFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
+		if err != nil {
+			response.Status = "error"
+			response.Payload = webJson.ErrorPayload{
+				Message: err.Error(),
+				Field:   "avatar",
+			}
+		} else {
+			defer wFile.Close()
+			io.Copy(wFile, rFile)
 
-	session.User.Avatar = filename
-	err = session.User.Save()
-	if err == nil {
-		// TODO: write error to response
+			user.Avatar = filename
+			err = user.Save()
+
+			response.Status = "success"
+			response.Payload = webJson.UserDataPayload{
+				Login:      user.Login,
+				Email:      user.Email,
+				Name:       user.Name,
+				AvatarPath: user.Avatar,
+				Score:      user.Score,
+			}
+		}
 	}
+
+	byteResponse, _ := response.MarshalJSON()
+	w.Write(byteResponse)
 }
 
 func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *models.Session) {
