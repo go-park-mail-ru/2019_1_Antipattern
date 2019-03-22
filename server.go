@@ -22,19 +22,6 @@ func NewRouter() http.Handler {
 	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleGetUserData, true)).Methods("GET")
 	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", middleware.SessionMiddleware(handlers.HandleGetUsers, false)).Methods("GET")
 
-	//staticServer := http.FileServer(http.Dir(
-	//	path.Join("..", "2019_1_DeathPacito_front", "public")))
-	//mediaServer := http.FileServer(http.Dir("media/"))
-
-	//r.PathPrefix("/media").Handler(http.StripPrefix("/media/", mediaServer))
-	//r.PathPrefix("/public").Handler(http.StripPrefix("/public/", staticServer))
-
-	//r.HandleFunc("/", middleware.SessionMiddleware(func(w http.ResponseWriter, r *http.Request, s *models.Session) {
-	//		http.ServeFile(w, r, path.Join(
-	//			"..", "2019_1_DeathPacito_front",
-	//			"public", "index.html"))
-	//	}, false))
-
 	return r
 }
 func main() {
