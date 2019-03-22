@@ -40,8 +40,7 @@ func NewRouter() http.Handler {
 			"public", "index.html"))
 	}, false))
 
-	gHandlers.AllowCredentials()
-	return gHandlers.CORS(allowOrigins, allowHeaders, allowMethods)(r)
+	return gHandlers.CORS(allowOrigins, allowHeaders, allowMethods, gHandlers.AllowCredentials())(r)
 }
 func main() {
 	models.InitModels()
