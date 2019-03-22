@@ -1,12 +1,13 @@
 package main
 
 import (
-	"./handlers"
-	"./models"
-	"./middleware"
 	"log"
 	"net/http"
 	"path"
+
+	"./handlers"
+	"./middleware"
+	"./models"
 
 	gHandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -19,12 +20,12 @@ func NewRouter() http.Handler {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/auth", middleware.SessionMiddleware(handlers.HandleLogin, false)).Methods("POST")                        // check, но изменить ошибки
-	r.HandleFunc("/api/register", middleware.SessionMiddleware(handlers.HandleRegister, false)).Methods("POST")                 // принимает неполные запросыFFF
-	r.HandleFunc("/api/upload_avatar", middleware.SessionMiddleware(handlers.HandleAvatarUpload, true)).Methods("POST")         //
-	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleUpdateUser, true)).Methods("PUT")                  //
-	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleGetUserData, true)).Methods("GET")                 // хз вроде норм
-	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", middleware.SessionMiddleware(handlers.HandleGetUsers, false)).Methods("GET") // -
+	r.HandleFunc("/api/auth", middleware.SessionMiddleware(handlers.HandleLogin, false)).Methods("POST")
+	r.HandleFunc("/api/register", middleware.SessionMiddleware(handlers.HandleRegister, false)).Methods("POST")
+	r.HandleFunc("/api/upload_avatar", middleware.SessionMiddleware(handlers.HandleAvatarUpload, true)).Methods("POST")
+	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleUpdateUser, true)).Methods("PUT")
+	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleGetUserData, true)).Methods("GET")
+	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", middleware.SessionMiddleware(handlers.HandleGetUsers, false)).Methods("GET")
 
 	staticServer := http.FileServer(http.Dir(
 		path.Join("..", "2019_1_DeathPacito_front", "public")))
@@ -38,6 +39,8 @@ func NewRouter() http.Handler {
 			"..", "2019_1_DeathPacito_front",
 			"public", "index.html"))
 	}, false))
+
+	gHandlers.AllowCredentials()
 	return gHandlers.CORS(allowOrigins, allowHeaders, allowMethods)(r)
 }
 func main() {
