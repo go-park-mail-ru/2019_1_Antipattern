@@ -9,14 +9,10 @@ import (
 	"./middleware"
 	"./models"
 
-	gHandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
 func NewRouter() http.Handler {
-	allowOrigins := gHandlers.AllowedOrigins([]string{"http://kpacubo.xyz", "http://api.kpacubo.xyz"})
-	allowHeaders := gHandlers.AllowedHeaders([]string{"X-Requested-With"})
-	allowMethods := gHandlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	r := mux.NewRouter()
 
@@ -34,13 +30,13 @@ func NewRouter() http.Handler {
 	r.PathPrefix("/media").Handler(http.StripPrefix("/media/", mediaServer))
 	r.PathPrefix("/public").Handler(http.StripPrefix("/public/", staticServer))
 
-	r.HandleFunc("/", middleware.SessionMiddleware(func(w http.ResponseWriter, r *http.Request, s *models.Session) {
-		http.ServeFile(w, r, path.Join(
-			"..", "2019_1_DeathPacito_front",
-			"public", "index.html"))
-	}, false))
+	//r.HandleFunc("/", middleware.SessionMiddleware(func(w http.ResponseWriter, r *http.Request, s *models.Session) {
+	//		http.ServeFile(w, r, path.Join(
+	//			"..", "2019_1_DeathPacito_front",
+	//			"public", "index.html"))
+	//	}, false))
 
-	return gHandlers.CORS(allowOrigins, allowHeaders, allowMethods, gHandlers.AllowCredentials())(r)
+	return r
 }
 func main() {
 	models.InitModels()
