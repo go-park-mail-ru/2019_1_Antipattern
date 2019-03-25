@@ -125,7 +125,7 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 	} else {
 		defer rFile.Close()
 		//fmt.Fprintf(w, "%v", handler.Header)
-		filename := filepath.Join(filepath.Join("..", "2019_DeathPacito_front",
+		filename := filepath.Join(filepath.Join("..", "2019_1_DeathPacito_front",
 			"media", "avatar",
 			uuid.New().String()+handler.Filename))
 
