@@ -125,7 +125,7 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 	} else {
 		defer rFile.Close()
 		//fmt.Fprintf(w, "%v", handler.Header)
-		filename := filepath.Join(filepath.Join("..", "2019_1_DeathPacito_front",
+		filename := filepath.Join(filepath.Join("..", "2019_1_DeathPacito_frontF",
 			"media", "avatar",
 			uuid.New().String()+handler.Filename))
 
@@ -269,4 +269,8 @@ func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 		return err
 	}
 	return nil
+}
+
+func HandleLogout(w http.ResponseWriter, r *http.Request, session *models.Session) {
+	session.User = nil
 }

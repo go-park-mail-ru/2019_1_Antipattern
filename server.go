@@ -21,7 +21,7 @@ func NewRouter() http.Handler {
 	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleUpdateUser, true)).Methods("PUT")
 	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleGetUserData, true)).Methods("GET")
 	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", middleware.SessionMiddleware(handlers.HandleGetUsers, false)).Methods("GET")
-
+	r.HandleFunc("/api/login", middleware.SessionMiddleware(handlers.HandleLogout, true)).Methods("DELETE")
 	return r
 }
 func main() {
