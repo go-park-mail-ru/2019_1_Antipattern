@@ -14,7 +14,6 @@ type UsersPayload struct {
 type UserDataPayload struct {
 	Login      string `json:"login,omitempty"`
 	Email      string `json:"email,omitempty"`
-	Name       string `json:"name,omitempty"`
 	AvatarPath string `json:"avatar,omitempty"`
 	Score      int    `json:"score"`
 }
@@ -28,7 +27,6 @@ type UsrRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 	Email    string `json:"email"`
-	Name     string `json:"name"`
 }
 
 type LeaderboardRequest struct {

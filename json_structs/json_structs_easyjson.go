@@ -42,8 +42,6 @@ func easyjson6a93d021DecodeTest(in *jlexer.Lexer, out *UsrRequest) {
 			out.Password = string(in.String())
 		case "email":
 			out.Email = string(in.String())
-		case "name":
-			out.Name = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -87,16 +85,6 @@ func easyjson6a93d021EncodeTest(out *jwriter.Writer, in UsrRequest) {
 			out.RawString(prefix)
 		}
 		out.String(string(in.Email))
-	}
-	{
-		const prefix string = ",\"name\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Name))
 	}
 	out.RawByte('}')
 }
@@ -262,8 +250,6 @@ func easyjson6a93d021DecodeTest2(in *jlexer.Lexer, out *UserDataPayload) {
 			out.Login = string(in.String())
 		case "email":
 			out.Email = string(in.String())
-		case "name":
-			out.Name = string(in.String())
 		case "avatar":
 			out.AvatarPath = string(in.String())
 		case "score":
@@ -301,16 +287,6 @@ func easyjson6a93d021EncodeTest2(out *jwriter.Writer, in UserDataPayload) {
 			out.RawString(prefix)
 		}
 		out.String(string(in.Email))
-	}
-	if in.Name != "" {
-		const prefix string = ",\"name\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Name))
 	}
 	if in.AvatarPath != "" {
 		const prefix string = ",\"avatar\":"

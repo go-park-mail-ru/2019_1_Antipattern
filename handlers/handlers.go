@@ -50,7 +50,6 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *models.Session
 			response.Payload = webJson.UserDataPayload{
 				Login:      user.Login,
 				Email:      user.Email,
-				Name:       user.Name,
 				AvatarPath: user.Avatar,
 				Score:      user.Score,
 			}
@@ -63,7 +62,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *models.Session
 
 // HandleRegister handle registration api request
 // request must contain post form:
-// 	login, password, email, name
+// 	login, password, email
 // Writes status json to response
 func HandleRegister(w http.ResponseWriter, r *http.Request, session *models.Session) {
 	userData := &webJson.UsrRequest{}
@@ -78,14 +77,13 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *models.Sess
 		Type: "reg",
 	}
 
-	user, err := models.NewUser(userData.Login, userData.Password, userData.Email, userData.Name)
+	user, err := models.NewUser(userData.Login, userData.Password, userData.Email)
 	if err == nil {
 		session.User = user
 		response.Status = "success"
 		response.Payload = webJson.UserDataPayload{
 			Login:      user.Login,
 			Email:      user.Email,
-			Name:       user.Name,
 			AvatarPath: user.Avatar,
 			Score:      user.Score,
 		}
@@ -125,8 +123,8 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 	} else {
 		defer rFile.Close()
 		//fmt.Fprintf(w, "%v", handler.Header)
-		uniqname := uuid.New().String()+handler.Filename
-		filename := filepath.Join(filepath.Join("media", "avatar", uniqname))
+		filename := filepath.Join(filepath.Join("media", "avatar", 
+				uuid.New().String()+handler.Filename))
 
 		wFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
@@ -139,14 +137,13 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 			defer wFile.Close()
 			io.Copy(wFile, rFile)
 
-			user.Avatar = filepath.Join("avatar", uniqname)
+			user.Avatar = filename
 			err = user.Save()
 
 			response.Status = "success"
 			response.Payload = webJson.UserDataPayload{
 				Login:      user.Login,
 				Email:      user.Email,
-				Name:       user.Name,
 				AvatarPath: user.Avatar,
 				Score:      user.Score,
 			}
@@ -182,7 +179,7 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *models.Sess
 			dataSlice := make([]webJson.UserDataPayload, 0, len(userSlice))
 			for _, user := range userSlice {
 				dataSlice = append(dataSlice, webJson.UserDataPayload{
-					Name:  user.Name,
+					Login:  user.Login,
 					Score: user.Score,
 				})
 			}
@@ -207,7 +204,6 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *models.S
 	response.Payload = webJson.UserDataPayload{
 		Login:      user.Login,
 		Email:      user.Email,
-		Name:       user.Name,
 		AvatarPath: user.Avatar,
 		Score:      user.Score,
 	}
@@ -227,8 +223,22 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *models.Se
 
 	user := session.User
 
-	if userData.Name != "" {
-		user.Name = userData.Name
+	if userData.Login != "" {
+		if !models.UpdateUserLogin(session.Sid, userData.Login) {
+			errorResponse := webJson.Response{
+				Type:   "usinfo",
+				Status: "error",
+				Payload: webJson.ErrorPayload{
+					Message: "This login is already used",
+					Field: "login",
+				},
+			}
+			byteResponse, _ := errorResponse.MarshalJSON()
+			w.Write(byteResponse)
+			return
+		}
+
+		user.Login = userData.Login
 	}
 
 	if userData.Password != "" {
@@ -245,7 +255,6 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *models.Se
 	response.Payload = webJson.UserDataPayload{
 		Login:      user.Login,
 		Email:      user.Email,
-		Name:       user.Name,
 		AvatarPath: user.Avatar,
 		Score:      user.Score,
 	}

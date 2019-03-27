@@ -3,7 +3,7 @@ package models
 import (
 	"errors"
 	"sort"
-
+	
 	"github.com/google/uuid"
 )
 
@@ -17,7 +17,6 @@ type User struct {
 	Login        string
 	PasswordHash string
 	Email        string
-	Name         string
 	Avatar       string
 	Score        int
 }
@@ -124,7 +123,30 @@ func NewSession() *Session {
 	return &session
 }
 
-func NewUser(login string, password string, email string, name string) (*User, error) {
+func LoginExists(login string) (bool) {
+	_, ok := Users[login]
+	return ok
+}
+
+func UpdateUserLogin(id string, newLogin string) (bool) {
+	user := Sessions[id].User
+	// Check for existing user
+	if _, ok := Users[newLogin]; ok {
+		if user.Login != newLogin {
+			return false
+		}
+		return true
+	}
+
+	Users[newLogin] = Users[user.Login]
+	oldLogin := user.Login 
+	user.Login = newLogin
+	UuidUserIndex[user.Uuid] = newLogin
+	delete(Users, oldLogin)
+	return true
+}
+
+func NewUser(login string, password string, email string) (*User, error) {
 	if login == "" {
 		return nil, errors.New("login")
 	}
@@ -137,11 +159,7 @@ func NewUser(login string, password string, email string, name string) (*User, e
 		return nil, errors.New("email")
 	}
 
-	if name == "" {
-		return nil, errors.New("name")
-	}
-
-	if _, ok := Users[login]; ok {
+	if LoginExists(login) {
 		return nil, errors.New("user already exists")
 	}
 	user := User{
@@ -149,7 +167,6 @@ func NewUser(login string, password string, email string, name string) (*User, e
 		Login:        login,
 		PasswordHash: password,
 		Email:        email,
-		Name:         name,
 		Score:        20,
 	}
 
@@ -173,6 +190,7 @@ func Auth(login string, password string) (*User, error) {
 func GetUserCount() (int, error) {
 	return len(Users), nil
 }
+
 func InitModels() {
 	Users = make(map[string]User)
 	UuidUserIndex = make(map[uint32]string)
