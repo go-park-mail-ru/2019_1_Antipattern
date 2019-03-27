@@ -1,4 +1,9 @@
 # IDEs
 .idea
-media
 .vscode
+
+#Files
+media
+
+#OS-dependent
+.DS_Store
