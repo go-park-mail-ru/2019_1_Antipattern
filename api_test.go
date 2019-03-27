@@ -59,15 +59,14 @@ func TestRegister(t *testing.T) {
 		"password" : 
 		"qweqwe234234&62342=",
 		"email": 
-		"death.pa_cito@mail.yandex.ru",
-		"name": "Gamer #23 @790-_%" }`)
+		"death.pa_cito@mail.yandex.ru"}`)
 
 	r, err := http.NewRequest("POST", "http://localhost/api/register", body)
 	if err != nil {
 		t.Fatal("Can't initialize")
 		return
 	}
-	expectedBody := `{"type":"reg","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"Gamer #23 @790-_%","score":20}}`
+	expectedBody := `{"type":"reg","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","score":20}}`
 
 	response, err := SendApiQuery(r, expectedBody)
 	if err != nil {
@@ -76,7 +75,7 @@ func TestRegister(t *testing.T) {
 	newUser, _ := models.GetUserByLogin("user_login")
 
 	if newUser.Login != "user_login" || newUser.PasswordHash != "qweqwe234234&62342=" ||
-		newUser.Email != "death.pa_cito@mail.yandex.ru" || newUser.Name != "Gamer #23 @790-_%" {
+		newUser.Email != "death.pa_cito@mail.yandex.ru" {
 		t.Errorf("Wrong user in db")
 		return
 	}
@@ -86,7 +85,7 @@ func TestRegisterAlreadyRegistered(t *testing.T) {
 	models.InitModels()
 	expectedBody := `{"type":"reg","status":"error","payload":{"message":"user already exists","field":"login"}}`
 
-	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
+	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru")
 	if err != nil {
 		t.Fatal("Can't create user")
 		return
@@ -111,9 +110,9 @@ func TestRegisterAlreadyRegistered(t *testing.T) {
 	}
 }
 func TestLogin(t *testing.T) {
-	expectedBody := `{"type":"log","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","name":"kek","score":20}}`
+	expectedBody := `{"type":"log","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","score":20}}`
 	models.InitModels()
-	user, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
+	user, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru")
 	if err != nil {
 		t.Fatal("Can't create user")
 		return
@@ -139,7 +138,7 @@ func TestLogin(t *testing.T) {
 func TestLoginWrongPassword(t *testing.T) {
 	models.InitModels()
 	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect password","field":"password"}}`
-	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
+	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru")
 	if err != nil {
 		t.Fatal("Can't create user")
 		return
@@ -163,7 +162,7 @@ func TestLoginWrongPassword(t *testing.T) {
 func TestLoginWrongLogin(t *testing.T) {
 	models.InitModels()
 	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect login","field":"login"}}`
-	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru", "kek")
+	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru")
 	if err != nil {
 		t.Fatal("Can't create user")
 		return
@@ -186,7 +185,7 @@ func TestLoginWrongLogin(t *testing.T) {
 }
 
 func FakeLoginAndAuth(request *http.Request) (*models.User, error) {
-	user, err := models.NewUser("fake_user_login", "12345", "mail@mail.ru", "yasher")
+	user, err := models.NewUser("fake_user_login", "12345", "mail@mail.ru")
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +202,7 @@ func FakeLoginAndAuth(request *http.Request) (*models.User, error) {
 func TestGetProfile(t *testing.T) {
 	models.InitModels()
 	request, err := http.NewRequest("GET", "http://localhost/api/profile", nil)
-	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"yasher","score":20}}`
+	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","score":20}}`
 	_, err = FakeLoginAndAuth(request)
 
 	if err != nil {
@@ -225,7 +224,7 @@ func TestUpdateProfile(t *testing.T) {
 		"password" : "qweqwe234234&62342=",
 		"name": "new name" }`)
 	request, err := http.NewRequest("PUT", "http://localhost/api/profile", body)
-	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","name":"new name","score":20}}`
+	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","score":20}}`
 
 	user, err := FakeLoginAndAuth(request)
 	if err != nil {
@@ -237,9 +236,7 @@ func TestUpdateProfile(t *testing.T) {
 	}
 
 	user, _ = models.GetUserByLogin("fake_user_login")
-	if user.Name != "new name" {
-		t.Errorf("Wrong name\n Expected:new name\nGot:%s", user.Name)
-	}
+
 	if user.PasswordHash != "qweqwe234234&62342=" {
 		t.Errorf("Wrong password hash\n Expected:qweqwe234234&62342=\nGot:%s", user.PasswordHash)
 	}
@@ -249,10 +246,10 @@ func TestGetLeaderboard(t *testing.T) {
 	models.InitModels()
 
 	for i := 1; i <= 27; i++ {
-		models.NewUser("npc_"+strconv.Itoa(i), "12345", "mail"+strconv.Itoa(i)+"@mail.ru", "Nick #"+strconv.Itoa(i))
+		models.NewUser("npc_"+strconv.Itoa(i), "12345", "mail"+strconv.Itoa(i)+"@mail.ru")
 	}
 	request, err := http.NewRequest("GET", "http://localhost/api/leaderboard/1", nil)
-	expectedBody := `{"type":"uslist","status":"success","payload":{"users":[{"name":"yasher","score":20},{"name":"Nick #1","score":20},{"name":"Nick #10","score":20},{"name":"Nick #11","score":20},{"name":"Nick #12","score":20},{"name":"Nick #13","score":20},{"name":"Nick #14","score":20},{"name":"Nick #15","score":20},{"name":"Nick #16","score":20},{"name":"Nick #17","score":20}],"count":28}}`
+	expectedBody := `{"type":"uslist","status":"success","payload":{"users":[{"login":"fake_user_login","score":20},{"login":"npc_1","score":20},{"login":"npc_10","score":20},{"login":"npc_11","score":20},{"login":"npc_12","score":20},{"login":"npc_13","score":20},{"login":"npc_14","score":20},{"login":"npc_15","score":20},{"login":"npc_16","score":20},{"login":"npc_17","score":20}],"count":28}}`
 	_, err = FakeLoginAndAuth(request)
 
 	if err != nil {
@@ -271,7 +268,7 @@ func TestGetLeaderboardTooBigPage(t *testing.T) {
 	expectedBody := `{"type":"uslist","status":"error","payload":{"message":"not enough users"}}`
 
 	for i := 1; i <= 27; i++ {
-		models.NewUser("npc_"+string(i), "12345", "mail"+string(i)+"@mail.ru", "Nick #"+string(i))
+		models.NewUser("npc_"+string(i), "12345", "mail"+string(i)+"@mail.ru")
 	}
 	request, err := http.NewRequest("GET", "http://localhost/api/leaderboard/31", nil)
 
