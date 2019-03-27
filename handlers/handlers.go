@@ -125,9 +125,8 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 	} else {
 		defer rFile.Close()
 		//fmt.Fprintf(w, "%v", handler.Header)
-		filename := filepath.Join(filepath.Join("..", "2019_1_DeathPacito_frontF",
-			"media", "avatar",
-			uuid.New().String()+handler.Filename))
+		uniqname := uuid.New().String()+handler.Filename
+		filename := filepath.Join(filepath.Join("media", "avatar", uniqname))
 
 		wFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
@@ -140,7 +139,7 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 			defer wFile.Close()
 			io.Copy(wFile, rFile)
 
-			user.Avatar = filename
+			user.Avatar = filepath.Join("avatar", uniqname)
 			err = user.Save()
 
 			response.Status = "success"
