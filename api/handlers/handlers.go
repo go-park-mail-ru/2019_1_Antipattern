@@ -123,8 +123,8 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 	} else {
 		defer rFile.Close()
 		//fmt.Fprintf(w, "%v", handler.Header)
-		filename := filepath.Join(filepath.Join("media", "avatar", 
-				uuid.New().String()+handler.Filename))
+		filename := filepath.Join(filepath.Join("/", "opt", "media", "avatar",
+			uuid.New().String()+handler.Filename))
 
 		wFile, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
 		if err != nil {
@@ -179,7 +179,7 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *models.Sess
 			dataSlice := make([]webJson.UserDataPayload, 0, len(userSlice))
 			for _, user := range userSlice {
 				dataSlice = append(dataSlice, webJson.UserDataPayload{
-					Login:  user.Login,
+					Login: user.Login,
 					Score: user.Score,
 				})
 			}
@@ -230,7 +230,7 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *models.Se
 				Status: "error",
 				Payload: webJson.ErrorPayload{
 					Message: "This login is already used",
-					Field: "login",
+					Field:   "login",
 				},
 			}
 			byteResponse, _ := errorResponse.MarshalJSON()
