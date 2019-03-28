@@ -1,0 +1,25 @@
+ 
+version: '3'
+
+services:
+  nginx:
+    build: './nginx'
+    ports: 
+      - "80:80"
+    volumes:
+      - /etc/letsencrypt/live:/etc/cert
+      - /opt/kpacubo:/opt/kpacubo/
+  api:
+    build: './api'
+    ports: 
+      - "8080:8080"
+    volumes:
+      - /opt/kpacubo/media:/opt/media
+  swagger:
+    build: './swagger'
+    ports: 
+      - "8001:8080"
+    volumes: 
+      - ./swagger:/swagger
+    environment:
+      - SWAGGER_JSON=/swagger/config.json
