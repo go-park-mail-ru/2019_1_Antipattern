@@ -6,9 +6,13 @@ services:
     build: './nginx'
     ports: 
       - "80:80"
+      - "443:443"
     volumes:
-      - /etc/letsencrypt/live:/etc/cert
+      - /etc/letsencrypt/live:/cert
       - /opt/kpacubo:/opt/kpacubo/
+    links:
+      - api
+      - swagger
   api:
     build: './api'
     ports: 
