@@ -10,15 +10,18 @@ services:
     volumes:
       - /etc/letsencrypt/live:/cert
       - /opt/kpacubo:/opt/kpacubo/
-    links:
+    networks:
       - api
       - swagger
+
   api:
     build: './api'
     ports: 
       - "8080:8080"
     volumes:
       - /opt/kpacubo/media:/opt/media
+    networks:
+      - api
   swagger:
     build: './swagger'
     ports: 
@@ -27,3 +30,5 @@ services:
       - ./swagger:/swagger
     environment:
       - SWAGGER_JSON=/swagger/config.json
+    networks:
+      - swagger
