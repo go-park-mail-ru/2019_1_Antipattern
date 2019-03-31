@@ -1,25 +1,41 @@
- 
-version: '3'
+version: '2'
 
 services:
+  api:
+    build: './api'
+    volumes:
+      - /opt/kpacubo/media:/opt/media
+    networks:
+      base:
+        ipv4_address: 10.5.0.2
+  
+  swagger:
+    build: './swagger'
+    volumes:
+      - ./swagger:/swagger
+    environment:
+      - SWAGGER_JSON=/swagger/config.json
+    networks:
+      base:
+        ipv4_address: 10.5.0.3
+
+
   nginx:
     build: './nginx'
     ports: 
       - "80:80"
+      - "443:443"
     volumes:
-      - /etc/letsencrypt/live:/etc/cert
       - /opt/kpacubo:/opt/kpacubo/
-  api:
-    build: './api'
-    ports: 
-      - "8080:8080"
-    volumes:
-      - /opt/kpacubo/media:/opt/media
-  swagger:
-    build: './swagger'
-    ports: 
-      - "8001:8080"
-    volumes: 
-      - ./swagger:/swagger
-    environment:
-      - SWAGGER_JSON=/swagger/config.json
+      - /etc/letsencrypt:/cert
+    networks:
+      base:
+        ipv4_address: 10.5.0.6
+
+networks:
+  base:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
