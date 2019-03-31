@@ -1,370 +1,464 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "Uber API",
-    "description": "Move your app forward with the Uber API",
-    "version": "1.0.0"
+    "description": "This is api-description of the most impressive and popular game website kpacubo.xyz",
+    "version": "1.0.0",
+    "title": "KPACUBOE API"
   },
-  "host": "api.uber.com",
+  "host": "api.kpacubo.xyz",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "auth",
+      "description": "Authorization, registration, logout"
+    },
+    {
+      "name": "updates",
+      "description": "Change information about an individual user"
+    },
+    {
+      "name": "user",
+      "description": "Getting information about users"
+    }
+  ],
   "schemes": [
     "https"
   ],
-  "basePath": "/v1",
   "produces": [
     "application/json"
   ],
+  "securityDefinitions": {
+    "sessionCookie": {
+      "type": "apiKey",
+      "name": "sid",
+      "in": "header"
+    }
+  },
   "paths": {
-    "/products": {
-      "get": {
-        "summary": "Product Types",
-        "description": "The Products endpoint returns information about the Uber products offered at a given location. The response includes the display name and other details about each product, and lists the products in the proper display order.",
+    "/api/auth": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logs in user",
+        "description": "Creates a user session, if it exists, and returns data about it.",
+        "operationId": "login",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [],
         "parameters": [
           {
-            "name": "latitude",
-            "in": "query",
-            "description": "Latitude component of location.",
+            "in": "body",
+            "name": "body",
+            "description": "Login and password for authentification",
             "required": true,
-            "type": "number",
-            "format": "double"
-          },
-          {
-            "name": "longitude",
-            "in": "query",
-            "description": "Longitude component of location.",
-            "required": true,
-            "type": "number",
-            "format": "double"
+            "schema": {
+              "$ref": "#/definitions/LoginRequest"
+            }
           }
-        ],
-        "tags": [
-          "Products"
         ],
         "responses": {
           "200": {
-            "description": "An array of products",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Product"
+            "description": "Succesfully loggged in",
+            "headers": {
+              "Set-Cookie": {
+                "type": "string"
               }
+            },
+            "schema": {
+              "$ref": "#/definitions/DefaultResponse"
             }
           },
+          "400": {
+            "description": "Failed to read request body"
+          },
           "default": {
-            "description": "Unexpected error",
+            "description": "Log-in failed",
             "schema": {
-              "$ref": "#/definitions/Error"
+              "$ref": "#/definitions/ErrorPayload"
             }
           }
         }
       }
     },
-    "/estimates/pricea": {
-      "get": {
-        "summary": "Price Estimates",
-        "description": "The Price Estimates endpoint returns an estimated price range for each product offered at a given location. The price estimate is provided as a formatted string with the full price range and the localized currency symbol.<br><br>The response also includes low and high estimates, and the [ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) currency code for situations requiring currency conversion. When surge is active for a particular product, its surge_multiplier will be greater than 1, but the price estimate already factors in this multiplier.",
+    "/api/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register new user",
+        "description": "Creates new user in database and user session, if it not exists, and returns data about it.",
+        "operationId": "register",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [],
         "parameters": [
           {
-            "name": "start_latitude",
-            "in": "query",
-            "description": "Latitude component of start location.",
+            "in": "body",
+            "name": "body",
+            "description": "Login, password and email for registration",
             "required": true,
-            "type": "number",
-            "format": "double"
-          },
-          {
-            "name": "start_longitude",
-            "in": "query",
-            "description": "Longitude component of start location.",
-            "required": true,
-            "type": "number",
-            "format": "double"
-          },
-          {
-            "name": "end_latitude",
-            "in": "query",
-            "description": "Latitude component of end location.",
-            "required": true,
-            "type": "number",
-            "format": "double"
-          },
-          {
-            "name": "end_longitude",
-            "in": "query",
-            "description": "Longitude component of end location.",
-            "required": true,
-            "type": "number",
-            "format": "double"
+            "schema": {
+              "$ref": "#/definitions/RegisterRequest"
+            }
           }
-        ],
-        "tags": [
-          "Estimates"
         ],
         "responses": {
           "200": {
-            "description": "An array of price estimates by product",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PriceEstimate"
+            "description": "Succesfully registered",
+            "headers": {
+              "Set-Cookie": {
+                "type": "string"
               }
+            },
+            "schema": {
+              "$ref": "#/definitions/DefaultResponse"
             }
           },
+          "400": {
+            "description": "Failed to read request body"
+          },
           "default": {
-            "description": "Unexpected error",
+            "description": "Registration failed",
             "schema": {
-              "$ref": "#/definitions/Error"
+              "$ref": "#/definitions/ErrorPayload"
             }
           }
         }
       }
     },
-    "/estimates/time": {
-      "get": {
-        "summary": "Time Estimates",
-        "description": "The Time Estimates endpoint returns ETAs for all products offered at a given location, with the responses expressed as integers in seconds. We recommend that this endpoint be called every minute to provide the most accurate, up-to-date ETAs.",
-        "parameters": [
+    "/api/upload_avatar": {
+      "post": {
+        "tags": [
+          "updates"
+        ],
+        "summary": "Updates user avatar",
+        "description": "Uploads a picture with an avatar to the server and gives a new path to the user",
+        "operationId": "upload_avatar",
+        "consumes": [
+          "multipart/form-data"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [
           {
-            "name": "start_latitude",
-            "in": "query",
-            "description": "Latitude component of start location.",
-            "required": true,
-            "type": "number",
-            "format": "double"
-          },
-          {
-            "name": "start_longitude",
-            "in": "query",
-            "description": "Longitude component of start location.",
-            "required": true,
-            "type": "number",
-            "format": "double"
-          },
-          {
-            "name": "customer_uuid",
-            "in": "query",
-            "type": "string",
-            "format": "uuid",
-            "description": "Unique customer identifier to be used for experience customization."
-          },
-          {
-            "name": "product_id",
-            "in": "query",
-            "type": "string",
-            "description": "Unique identifier representing a specific product for a given latitude & longitude."
+            "sessionCookie": []
           }
         ],
-        "tags": [
-          "Estimates"
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "avatar",
+            "type": "file",
+            "description": "User avatar form data with avatar file",
+            "required": true
+          }
         ],
         "responses": {
           "200": {
-            "description": "An array of products",
+            "description": "Succesfully uploaded",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Product"
-              }
+              "$ref": "#/definitions/DefaultResponse"
             }
           },
+          "403": {
+            "description": "Unauthorized"
+          },
           "default": {
-            "description": "Unexpected error",
+            "description": "Upload failed",
             "schema": {
-              "$ref": "#/definitions/Error"
+              "$ref": "#/definitions/ErrorPayload"
             }
           }
         }
       }
     },
-    "/me": {
+    "/api/profile": {
       "get": {
-        "summary": "User Profile",
-        "description": "The User Profile endpoint returns information about the Uber user that has authorized with the application.",
         "tags": [
-          "User"
+          "user"
+        ],
+        "summary": "Get information about user",
+        "description": "Get login, email and avatar path",
+        "operationId": "get_profile",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "produces": [
+          "application/json"
         ],
         "responses": {
           "200": {
-            "description": "Profile information for a user",
+            "description": "User data response",
             "schema": {
-              "$ref": "#/definitions/Profile"
+              "$ref": "#/definitions/DefaultResponse"
             }
           },
+          "403": {
+            "description": "Unauthorized"
+          },
           "default": {
-            "description": "Unexpected error",
+            "description": "Verification failed",
             "schema": {
-              "$ref": "#/definitions/Error"
+              "$ref": "#/definitions/ErrorPayload"
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "updates"
+        ],
+        "summary": "Updates information about user",
+        "description": "Updates login or email",
+        "operationId": "update_profile",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Login, password and email for registration",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProfileRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Succesfully updated",
+            "schema": {
+              "$ref": "#/definitions/DefaultResponse"
+            }
+          },
+          "400": {
+            "description": "Failed to read request body"
+          },
+          "403": {
+            "description": "Unauthorized"
+          },
+          "default": {
+            "description": "Update failed",
+            "schema": {
+              "$ref": "#/definitions/ErrorPayload"
             }
           }
         }
       }
     },
-    "/history": {
+    "/api/leaderboard/{page}": {
       "get": {
-        "summary": "User Activity",
-        "description": "The User Activity endpoint returns data about a user's lifetime activity with Uber. The response will include pickup locations and times, dropoff locations and times, the distance of past requests, and information about which products were requested.<br><br>The history array in the response will have a maximum length based on the limit parameter. The response value count may exceed limit, therefore subsequent API requests may be necessary.",
+        "tags": [
+          "user"
+        ],
+        "summary": "Get information about best users",
+        "description": "Returns information about the top users located on the requested page",
+        "operationId": "get_leaders",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
         "parameters": [
           {
-            "name": "offset",
-            "in": "query",
+            "name": "page",
+            "in": "path",
+            "description": "Page to return information about",
+            "required": true,
             "type": "integer",
-            "format": "int32",
-            "description": "Offset the list of returned results by this amount. Default is zero."
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "type": "integer",
-            "format": "int32",
-            "description": "Number of items to retrieve. Default is 5, maximum is 100."
+            "format": "int64"
           }
-        ],
-        "tags": [
-          "User"
         ],
         "responses": {
           "200": {
-            "description": "History information for the given user",
+            "description": "Succesfully returned",
             "schema": {
-              "$ref": "#/definitions/Activities"
+              "$ref": "#/definitions/UsersResponse"
             }
           },
+          "403": {
+            "description": "Unauthorized"
+          },
           "default": {
-            "description": "Unexpected error",
+            "description": "Get-request failed",
             "schema": {
-              "$ref": "#/definitions/Error"
+              "$ref": "#/definitions/ErrorPayload"
             }
+          }
+        }
+      }
+    },
+    "/api/login": {
+      "delete": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Logout user",
+        "description": "Delete user session",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Succesfully logged out"
+          },
+          "403": {
+            "description": "Unauthorized"
           }
         }
       }
     }
   },
   "definitions": {
-    "Product": {
+    "LoginRequest": {
+      "type": "object",
       "properties": {
-        "product_id": {
-          "type": "string",
-          "description": "Unique identifier representing a specific product for a given latitude & longitude. For example, uberX in San Francisco will have a different product_id than uberX in Los Angeles."
+        "login": {
+          "type": "string"
         },
-        "description": {
-          "type": "string",
-          "description": "Description of product."
-        },
-        "display_name": {
-          "type": "string",
-          "description": "Display name of product."
-        },
-        "capacity": {
-          "type": "string",
-          "description": "Capacity of product. For example, 4 people."
-        },
-        "image": {
-          "type": "string",
-          "description": "Image URL representing the product."
+        "password": {
+          "type": "string"
         }
       }
     },
-    "PriceEstimate": {
+    "RegisterRequest": {
+      "type": "object",
       "properties": {
-        "product_id": {
-          "type": "string",
-          "description": "Unique identifier representing a specific product for a given latitude & longitude. For example, uberX in San Francisco will have a different product_id than uberX in Los Angeles"
-        },
-        "currency_code": {
-          "type": "string",
-          "description": "[ISO 4217](http://en.wikipedia.org/wiki/ISO_4217) currency code."
-        },
-        "display_name": {
-          "type": "string",
-          "description": "Display name of product."
-        },
-        "estimate": {
-          "type": "string",
-          "description": "Formatted string of estimate in local currency of the start location. Estimate could be a range, a single number (flat rate) or \"Metered\" for TAXI."
-        },
-        "low_estimate": {
-          "type": "number",
-          "description": "Lower bound of the estimated price."
-        },
-        "high_estimate": {
-          "type": "number",
-          "description": "Upper bound of the estimated price."
-        },
-        "surge_multiplier": {
-          "type": "number",
-          "description": "Expected surge multiplier. Surge is active if surge_multiplier is greater than 1. Price estimate already factors in the surge multiplier."
-        }
-      }
-    },
-    "Profile": {
-      "properties": {
-        "first_name": {
-          "type": "string",
-          "description": "First name of the Uber user."
-        },
-        "last_name": {
-          "type": "string",
-          "description": "Last name of the Uber user."
+        "login": {
+          "type": "string"
         },
         "email": {
-          "type": "string",
-          "description": "Email address of the Uber user"
+          "type": "string"
         },
-        "picture": {
-          "type": "string",
-          "description": "Image URL of the Uber user."
-        },
-        "promo_code": {
-          "type": "string",
-          "description": "Promo code of the Uber user."
+        "password": {
+          "type": "string"
         }
       }
     },
-    "Activity": {
+    "ProfileRequest": {
+      "type": "object",
       "properties": {
-        "uuid": {
-          "type": "string",
-          "description": "Unique identifier for the activity"
+        "login": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
         }
       }
     },
-    "Activities": {
+    "UsersResponse": {
+      "type": "object",
       "properties": {
-        "offset": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Position in pagination."
-        },
-        "limit": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of items to retrieve (100 max)."
+        "users": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LeaderboardUser"
+          }
         },
         "count": {
           "type": "integer",
-          "format": "int32",
-          "description": "Total number of items available."
+          "format": "int64"
+        }
+      }
+    },
+    "DefaultResponse": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
         },
-        "history": {
-          "type": "array",
-          "items": {
-              "$ref": "#/definitions/Activity"
-           }
+        "status": {
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/definitions/UserInfo"
+        }
+      }
+    },
+    "UserInfo": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "avatar": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "LeaderboardUser": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string"
+        },
+        "score": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "ErrorPayload": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "payload": {
+          "$ref": "#/definitions/Error"
         }
       }
     },
     "Error": {
+      "type": "object",
       "properties": {
-        "code": {
-          "type": "integer",
-          "format": "int32"
-        },
         "message": {
           "type": "string"
         },
-        "fields": {
+        "field": {
           "type": "string"
         }
       }
     }
   }
-} 
+}
