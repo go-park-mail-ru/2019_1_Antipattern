@@ -216,13 +216,14 @@ func GetUserCount() (int64, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	return collection.CountDocuments(ctx, bson.D{})
 }
-func InitModels() {
-	collection, err := dbConnect()
-	if err != nil {
-		return
+func InitModels(clearDb bool) {
+	if clearDb {
+		collection, err := dbConnect()
+		if err != nil {
+			return
+		}
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		collection.DeleteMany(ctx, bson.D{})
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-
-	collection.DeleteMany(ctx, bson.D{})
 	Sessions = make(map[string]Session)
 }

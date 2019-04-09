@@ -6,7 +6,7 @@ import (
 
 	"./handlers"
 	"./middleware"
-
+	"./models"
 	"github.com/gorilla/mux"
 )
 
@@ -24,5 +24,6 @@ func NewRouter() http.Handler {
 	return r
 }
 func main() {
+	models.InitModels(false)
 	log.Fatal(http.ListenAndServe(":8080", NewRouter()))
 }

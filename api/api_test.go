@@ -52,7 +52,7 @@ func SendApiQuery(request *http.Request, expectedBody string) (*httptest.Respons
 	return response, nil
 }
 func TestRegister(t *testing.T) {
-	models.InitModels()
+	models.InitModels(true)
 
 	body := strings.NewReader(`{
 		"login":"user_login",
@@ -83,7 +83,7 @@ func TestRegister(t *testing.T) {
 	CheckSessionSetCookie(t, *newUser, response)
 }
 func TestRegisterAlreadyRegistered(t *testing.T) {
-	models.InitModels()
+	models.InitModels(true)
 	expectedBody := `{"type":"reg","status":"error","payload":{"message":"user already exists","field":"login"}}`
 
 	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru")
@@ -112,7 +112,7 @@ func TestRegisterAlreadyRegistered(t *testing.T) {
 }
 func TestLogin(t *testing.T) {
 	expectedBody := `{"type":"log","status":"success","payload":{"login":"user_login","email":"death.pa_cito@mail.yandex.ru","score":20}}`
-	models.InitModels()
+	models.InitModels(true)
 	user, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru")
 	if err != nil {
 		t.Fatal("Can't create user")
@@ -137,7 +137,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestLoginWrongPassword(t *testing.T) {
-	models.InitModels()
+	models.InitModels(true)
 	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect password","field":"password"}}`
 	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru")
 	if err != nil {
@@ -161,7 +161,7 @@ func TestLoginWrongPassword(t *testing.T) {
 }
 
 func DisabledTestLoginWrongLogin(t *testing.T) {
-	models.InitModels()
+	models.InitModels(true)
 	expectedBody := `{"type":"log","status":"error","payload":{"message":"incorrect login","field":"login"}}`
 	_, err := models.NewUser("user_login", "1235689", "death.pa_cito@mail.yandex.ru")
 	if err != nil {
@@ -201,7 +201,7 @@ func FakeLoginAndAuth(request *http.Request) (*models.User, error) {
 }
 
 func TestGetProfile(t *testing.T) {
-	models.InitModels()
+	models.InitModels(true)
 	request, err := http.NewRequest("GET", "http://localhost/api/profile", nil)
 	expectedBody := `{"type":"usinfo","status":"success","payload":{"login":"fake_user_login","email":"mail@mail.ru","score":20}}`
 	_, err = FakeLoginAndAuth(request)
@@ -220,7 +220,7 @@ func TestGetProfile(t *testing.T) {
 }
 
 func TestUpdateProfile(t *testing.T) {
-	models.InitModels()
+	models.InitModels(true)
 	body := strings.NewReader(`{
 		"password" : "qweqwe234234&62342=",
 		"name": "new name" }`)
@@ -244,7 +244,7 @@ func TestUpdateProfile(t *testing.T) {
 }
 
 func TestGetLeaderboard(t *testing.T) {
-	models.InitModels()
+	models.InitModels(true)
 
 	for i := 1; i <= 27; i++ {
 		a := strconv.Itoa(i)
@@ -266,7 +266,7 @@ func TestGetLeaderboard(t *testing.T) {
 }
 
 func TestGetLeaderboardTooBigPage(t *testing.T) {
-	models.InitModels()
+	models.InitModels(true)
 	expectedBody := `{"type":"uslist","status":"error","payload":{"message":"not enough users"}}`
 
 	for i := 1; i <= 27; i++ {
