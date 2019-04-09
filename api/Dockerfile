@@ -9,6 +9,7 @@ RUN go get github.com/mailru/easyjson/jlexer
 RUN go get github.com/mailru/easyjson/jwriter
 RUN go get go.mongodb.org/mongo-driver/mongo
 RUN go get go.mongodb.org/mongo-driver/bson
+RUN go get github.com/dgrijalva/jwt-go
 RUN go build server.go 
 EXPOSE 8080
 ENTRYPOINT ./server
