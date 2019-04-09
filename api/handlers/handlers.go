@@ -187,7 +187,7 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *models.Sess
 			count, _ := models.GetUserCount()
 			response.Payload = webJson.UsersPayload{
 				Users: dataSlice,
-				Count: count,
+				Count: int(count),
 			}
 		}
 	}
@@ -225,20 +225,6 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *models.Se
 	user := session.User
 
 	if userData.Login != "" {
-		if !models.UpdateUserLogin(session.Sid, userData.Login) {
-			errorResponse := webJson.Response{
-				Type:   "usinfo",
-				Status: "error",
-				Payload: webJson.ErrorPayload{
-					Message: "This login is already used",
-					Field:   "login",
-				},
-			}
-			byteResponse, _ := errorResponse.MarshalJSON()
-			w.Write(byteResponse)
-			return
-		}
-
 		user.Login = userData.Login
 	}
 

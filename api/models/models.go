@@ -1,10 +1,19 @@
 package models
 
 import (
+	"context"
 	"errors"
-	"sort"
-	
+	"time"
+
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
+	_ "go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	_ "go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	_ "go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	_ "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Model interface {
@@ -13,12 +22,12 @@ type Model interface {
 }
 
 type User struct {
-	Uuid         uint32
-	Login        string
-	PasswordHash string
-	Email        string
-	Avatar       string
-	Score        int
+	Uuid         primitive.ObjectID `bson:"_id,omitempty"`
+	Login        string             `bson:"login"`
+	PasswordHash string             `bson:"password_hash,omitempty"`
+	Email        string             `bson:"email,omitempty"`
+	Avatar       string             `bson:"avatar,omitempty"`
+	Score        int                `bson:"score"`
 }
 
 type Session struct {
@@ -26,9 +35,23 @@ type Session struct {
 	User *User
 }
 
-var Users map[string]User
-var UuidUserIndex map[uint32]string
 var Sessions map[string]Session
+
+func dbConnect() (*mongo.Collection, error) {
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+	return client.Database("kpacubo").Collection("users"), nil
+}
 
 func (session *Session) Save() error {
 	Sessions[session.Sid] = *session
@@ -36,31 +59,34 @@ func (session *Session) Save() error {
 }
 
 func (user *User) Save() error {
-	Users[user.Login] = *user
-	return nil
+	collection, err := dbConnect()
+	if err != nil {
+		return errors.New("Fail to connect db")
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	// TODO(ukhachev): better update
+	_, err = collection.ReplaceOne(ctx, bson.D{{"_id", user.Uuid}}, user)
+
+	return err
 }
 
-func GetUser(uuid uint32) (*User, error) {
-	login, exists := UuidUserIndex[uuid]
-	if !exists {
-		return nil, errors.New("wrong uuid")
-	}
+func getUser(findOptions bson.D) (*User, error) {
+	collection, err := dbConnect()
+	if err != nil {
 
-	user, ok := Users[login]
-	if !ok {
-		return nil, errors.New("uuid-login match error")
+		return nil, errors.New("Fail to connect db")
 	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
+	user := User{}
+	collection.FindOne(ctx, findOptions).Decode(&user)
 	return &user, nil
 }
-
+func GetUser(id primitive.ObjectID) (*User, error) {
+	return getUser(bson.D{{"_id", id}})
+}
 func GetUserByLogin(login string) (*User, error) {
-	user, exists := Users[login]
-	if !exists {
-		return nil, errors.New("wrong login")
-	}
-
-	return &user, nil
+	return getUser(bson.D{{"login", login}})
 }
 
 func GetSession(id string) (*Session, error) {
@@ -75,31 +101,41 @@ func GetUsers(count, page int) ([]User, error) {
 	if page < 1 {
 		return nil, errors.New("invalid page number")
 	}
+	collection, err := dbConnect()
+	if err != nil {
+		return nil, errors.New("Fail to connect db")
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
-	min := count * (page - 1)
-	if min >= len(Users) {
+	options := options.Find()
+	options.
+		SetLimit(int64(count)).
+		SetSkip(int64(page-1) * int64(count)).
+		SetSort(bson.M{"score": -1, "login": 1}).
+		SetProjection(bson.M{"login": 1, "score": 1})
+
+	cursor, err := collection.Find(ctx, bson.D{}, options)
+	if err != nil {
+		return nil, errors.New("DB error")
+	}
+	if !cursor.Next(ctx) {
 		return nil, errors.New("not enough users")
 	}
+	defer cursor.Close(ctx)
 
-	//var max uint = uint(math.Max(float64(count*page), float64(len(users))))
-
-	max := count * page
-	if max > len(Users) {
-		max = len(Users)
+	var userSlice []User
+	for {
+		var user User
+		err = cursor.Decode(&user)
+		if err != nil {
+			return nil, err
+		}
+		userSlice = append(userSlice, user)
+		if !cursor.Next(ctx) {
+			break
+		}
 	}
-
-	keySlice := make([]string, 0, len(Users))
-	for k := range Users {
-		keySlice = append(keySlice, k)
-	}
-	sort.Strings(keySlice)
-
-	userSlice := make([]User, 0, len(Users))
-	for _, v := range keySlice {
-		userSlice = append(userSlice, Users[v])
-	}
-
-	return userSlice[min:max], nil
+	return userSlice, nil
 }
 
 func (session *Session) Delete() error {
@@ -108,8 +144,9 @@ func (session *Session) Delete() error {
 }
 
 func (user *User) Delete() error {
-	delete(UuidUserIndex, user.Uuid)
-	delete(Users, user.Login)
+	//TODO : implement later
+	//delete(UuidUserIndex, user.Uuid)
+	//delete(Users, user.Login)
 	return nil
 }
 
@@ -121,29 +158,6 @@ func NewSession() *Session {
 	}
 	Sessions[id] = session
 	return &session
-}
-
-func LoginExists(login string) (bool) {
-	_, ok := Users[login]
-	return ok
-}
-
-func UpdateUserLogin(id string, newLogin string) (bool) {
-	user := Sessions[id].User
-	// Check for existing user
-	if _, ok := Users[newLogin]; ok {
-		if user.Login != newLogin {
-			return false
-		}
-		return true
-	}
-
-	Users[newLogin] = Users[user.Login]
-	oldLogin := user.Login 
-	user.Login = newLogin
-	UuidUserIndex[user.Uuid] = newLogin
-	delete(Users, oldLogin)
-	return true
 }
 
 func NewUser(login string, password string, email string) (*User, error) {
@@ -158,41 +172,57 @@ func NewUser(login string, password string, email string) (*User, error) {
 	if email == "" {
 		return nil, errors.New("email")
 	}
-
-	if LoginExists(login) {
-		return nil, errors.New("user already exists")
+	collection, err := dbConnect()
+	if err != nil {
+		return nil, errors.New("Fail to connect db")
 	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
 	user := User{
-		Uuid:         uuid.New().ID(),
 		Login:        login,
 		PasswordHash: password,
 		Email:        email,
 		Score:        20,
 	}
 
-	Users[login] = user
-	UuidUserIndex[user.Uuid] = user.Login
+	result, err := collection.InsertOne(ctx, user)
+	if err != nil {
+		return nil, errors.New("user already exists")
+	}
+	user.Uuid = result.InsertedID.(primitive.ObjectID)
 	return &user, nil
 }
 
 func Auth(login string, password string) (*User, error) {
-	user, ok := Users[login]
-	if !ok {
-		return nil, errors.New("login")
+	collection, err := dbConnect()
+	if err != nil {
+		return nil, errors.New("Fail to connect db")
 	}
-	if user.PasswordHash != password {
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	userBytes := collection.FindOne(ctx, bson.D{{"login", login}, {"password_hash", password}})
+
+	var user User
+	err = userBytes.Decode(&user)
+	if err != nil {
 		return nil, errors.New("password")
 	}
-
 	return &user, nil
 }
-
-func GetUserCount() (int, error) {
-	return len(Users), nil
+func GetUserCount() (int64, error) {
+	collection, err := dbConnect()
+	if err != nil {
+		return 0, errors.New("Fail to connect db")
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	return collection.CountDocuments(ctx, bson.D{})
 }
-
 func InitModels() {
-	Users = make(map[string]User)
-	UuidUserIndex = make(map[uint32]string)
+	collection, err := dbConnect()
+	if err != nil {
+		return
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	collection.DeleteMany(ctx, bson.D{})
 	Sessions = make(map[string]Session)
 }

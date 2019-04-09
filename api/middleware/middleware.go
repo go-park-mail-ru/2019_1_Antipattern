@@ -1,8 +1,10 @@
 package middleware
 
 import (
-	"../models"
 	"net/http"
+
+	"../models"
+	_ "github.com/dgrijalva/jwt-go"
 )
 
 func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Session), authRequiered bool) http.HandlerFunc {
