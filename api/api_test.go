@@ -74,7 +74,6 @@ func TestRegister(t *testing.T) {
 		//return
 	}
 	newUser, _ := models.GetUserByLogin("user_login")
-	fmt.Println(newUser)
 
 	if newUser.Login != "user_login" || newUser.PasswordHash != "qweqwe234234&62342=" ||
 		newUser.Email != "death.pa_cito@mail.yandex.ru" {
