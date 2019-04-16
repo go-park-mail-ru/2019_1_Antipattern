@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	_ "fmt"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 
@@ -17,7 +18,31 @@ import (
 	"../models"
 )
 
-func HandleLogin(w http.ResponseWriter, r *http.Request, session *models.Session) {
+func setJWT(w http.ResponseWriter, user *models.User) error {
+	secret := []byte("secret")
+	uidHex := ""
+	if user != nil {
+		uidHex = user.Uuid.Hex()
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"uid": uidHex,
+		"sid": uuid.New().String(),
+	})
+	tokenString, err := token.SignedString(secret)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return errors.New("Failed to create token")
+	}
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, cookie)
+	return nil
+}
+
+func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	userData := &webJson.UsrRequest{}
 
 	err := getRequest(userData, r)
@@ -30,29 +55,25 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *models.Session
 		Type: "log",
 	}
 
-	if session.User != nil {
-		response.Status = "success"
-	} else {
-		user, err := models.Auth(userData.Login, userData.Password)
-		if err != nil {
-			wrong := err.Error()
-			response.Status = "error"
-			response.Payload = webJson.ErrorPayload{
-				Message: "incorrect " + wrong,
-				Field:   wrong,
-			}
-		} else {
-			session.User = user
-			response.Status = "success"
+	user, err := models.Auth(userData.Login, userData.Password)
+	if err != nil {
+		wrong := err.Error()
+		response.Status = "error"
+		response.Payload = webJson.ErrorPayload{
+			Message: "incorrect " + wrong,
+			Field:   wrong,
 		}
+	} else {
+		setJWT(w, user)
+		response.Status = "success"
+	}
 
-		if response.Status == "success" {
-			response.Payload = webJson.UserDataPayload{
-				Login:      user.Login,
-				Email:      user.Email,
-				AvatarPath: user.Avatar,
-				Score:      user.Score,
-			}
+	if response.Status == "success" {
+		response.Payload = webJson.UserDataPayload{
+			Login:      user.Login,
+			Email:      user.Email,
+			AvatarPath: user.Avatar,
+			Score:      user.Score,
 		}
 	}
 
@@ -64,7 +85,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request, session *models.Session
 // request must contain post form:
 // 	login, password, email
 // Writes status json to response
-func HandleRegister(w http.ResponseWriter, r *http.Request, session *models.Session) {
+func HandleRegister(w http.ResponseWriter, r *http.Request) {
 	userData := &webJson.UsrRequest{}
 
 	err := getRequest(userData, r)
@@ -79,7 +100,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *models.Sess
 
 	user, err := models.NewUser(userData.Login, userData.Password, userData.Email)
 	if err == nil {
-		session.User = user
+		setJWT(w, user)
 		response.Status = "success"
 		response.Payload = webJson.UserDataPayload{
 			Login:      user.Login,
@@ -106,8 +127,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request, session *models.Sess
 	w.Write(byteResponse)
 }
 
-func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.Session) {
-	user := session.User
+func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, user *models.User) {
 	response := webJson.Response{
 		Type: "usinfo",
 	}
@@ -122,7 +142,6 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 		}
 	} else {
 		defer rFile.Close()
-		//fmt.Fprintf(w, "%v", handler.Header)
 		avatarName := uuid.New().String() + handler.Filename
 		filename := filepath.Join(filepath.Join("/", "opt", "media", "avatar",
 			avatarName))
@@ -155,7 +174,7 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, session *models.
 	w.Write(byteResponse)
 }
 
-func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *models.Session) {
+func HandleGetUsers(w http.ResponseWriter, r *http.Request) {
 	response := webJson.Response{
 		Type: "uslist",
 	}
@@ -195,8 +214,7 @@ func HandleGetUsers(w http.ResponseWriter, r *http.Request, session *models.Sess
 	w.Write(byteResponse)
 }
 
-func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *models.Session) {
-	user := session.User
+func HandleGetUserData(w http.ResponseWriter, r *http.Request, user *models.User) {
 	response := webJson.Response{
 		Type:   "usinfo",
 		Status: "success",
@@ -213,7 +231,7 @@ func HandleGetUserData(w http.ResponseWriter, r *http.Request, session *models.S
 	w.Write(byteResponse)
 }
 
-func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *models.Session) {
+func HandleUpdateUser(w http.ResponseWriter, r *http.Request, user *models.User) {
 	userData := &webJson.UsrRequest{}
 
 	err := getRequest(userData, r)
@@ -221,8 +239,6 @@ func HandleUpdateUser(w http.ResponseWriter, r *http.Request, session *models.Se
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	user := session.User
 
 	if userData.Login != "" {
 		user.Login = userData.Login
@@ -266,6 +282,6 @@ func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 	return nil
 }
 
-func HandleLogout(w http.ResponseWriter, r *http.Request, session *models.Session) {
-	session.User = nil
+func HandleLogout(w http.ResponseWriter, r *http.Request, user *models.User) {
+	setJWT(w, nil)
 }

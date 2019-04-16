@@ -6,11 +6,59 @@ import (
 
 	"../models"
 	"github.com/dgrijalva/jwt-go"
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Session), authRequiered bool) http.HandlerFunc {
+func JWTMiddleware(next func(http.ResponseWriter, *http.Request, *models.User)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		secret := []byte("secret")
+		cookie, err := r.Cookie("token")
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			}
+			return secret, nil
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+			uid, ok := claims["uid"].(string)
+			if !ok {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			if uid == "" {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			objectID, err := primitive.ObjectIDFromHex(uid)
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+			user, err := models.GetUser(objectID)
+			if err != nil {
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			next(w, r, user)
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+
+	}
+}
+
+/*func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Session), authRequiered bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		secret := []byte("secret")
 		cookie, err := r.Cookie("token")
@@ -28,7 +76,7 @@ func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Ses
 				Value:    tokenString,
 				HttpOnly: true,
 			}
-			//http.SetCookie(w, cookie)
+			http.SetCookie(w, cookie)
 		}
 		session := models.Session{User: nil}
 
@@ -53,6 +101,7 @@ func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Ses
 					fmt.Println("Auth error!")
 				} else {
 					session.User = user
+
 				}
 			}
 		} else {
@@ -60,10 +109,12 @@ func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Ses
 		}
 
 		if authRequiered && session.User == nil {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-
+		if authRequiered {
+			fmt.Println(session.User.Login)
+		}
 		next(w, r, &session)
 		userHex := ""
 		if session.User != nil {
@@ -79,9 +130,7 @@ func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Ses
 		if err != nil {
 			// TODO: write error to response
 		}
-
 		cookie.Value = tokenString
-		http.SetCookie(w, cookie)
-
 	}
 }
+*/
