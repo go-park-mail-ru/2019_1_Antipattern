@@ -28,7 +28,7 @@ func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Ses
 				Value:    tokenString,
 				HttpOnly: true,
 			}
-			http.SetCookie(w, cookie)
+			//http.SetCookie(w, cookie)
 		}
 		session := models.Session{User: nil}
 
@@ -58,6 +58,13 @@ func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Ses
 		} else {
 			fmt.Println(err)
 		}
+
+		if authRequiered && session.User == nil {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		next(w, r, &session)
 		userHex := ""
 		if session.User != nil {
 			userHex = session.User.Uuid.Hex()
@@ -74,11 +81,7 @@ func SessionMiddleware(next func(http.ResponseWriter, *http.Request, *models.Ses
 		}
 
 		cookie.Value = tokenString
-		if authRequiered && session.User == nil {
-			w.WriteHeader(http.StatusForbidden)
-			return
-		}
+		http.SetCookie(w, cookie)
 
-		next(w, r, &session)
 	}
 }

@@ -28,6 +28,7 @@ func CheckSessionSetCookie(t *testing.T, user models.User, w *httptest.ResponseR
 	header.Add("Cookie", cookiesString)
 	requestCooies := http.Request{Header: header}
 	tokenString, err := requestCooies.Cookie("token")
+
 	if err != nil {
 		t.Errorf("Session cookie not set")
 		return
@@ -43,6 +44,7 @@ func CheckSessionSetCookie(t *testing.T, user models.User, w *httptest.ResponseR
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		// TODO: check type assertion
 		uid := claims["uid"].(string)
+
 		if uid != user.Uuid.Hex() {
 			t.Errorf("Session uuid is wrong.\nExpected:%s\nGot:%s", user.Uuid.Hex(), uid)
 			return
