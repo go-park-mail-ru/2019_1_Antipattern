@@ -25,5 +25,5 @@ func NewRouter() http.Handler {
 }
 func main() {
 	models.InitModels(false)
-	log.Fatal(http.ListenAndServe(":8080", NewRouter()))
+	log.Fatal(http.ListenAndServe(":8080", middleware.PanicMiddleware(NewRouter())))
 }
