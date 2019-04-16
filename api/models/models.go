@@ -7,13 +7,9 @@ import (
 
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
-	_ "go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	_ "go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	_ "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	_ "go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Model interface {
@@ -35,8 +31,6 @@ type Session struct {
 	User *User
 }
 
-var Sessions map[string]Session
-
 func dbConnect() (*mongo.Collection, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 
@@ -51,11 +45,6 @@ func dbConnect() (*mongo.Collection, error) {
 		return nil, err
 	}
 	return client.Database("kpacubo").Collection("users"), nil
-}
-
-func (session *Session) Save() error {
-	Sessions[session.Sid] = *session
-	return nil
 }
 
 func (user *User) Save() error {
@@ -73,13 +62,15 @@ func (user *User) Save() error {
 func getUser(findOptions bson.D) (*User, error) {
 	collection, err := dbConnect()
 	if err != nil {
-
 		return nil, errors.New("Fail to connect db")
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 
 	user := User{}
-	collection.FindOne(ctx, findOptions).Decode(&user)
+	err = collection.FindOne(ctx, findOptions).Decode(&user)
+	if err != nil {
+		return nil, err
+	}
 	return &user, nil
 }
 func GetUser(id primitive.ObjectID) (*User, error) {
@@ -87,14 +78,6 @@ func GetUser(id primitive.ObjectID) (*User, error) {
 }
 func GetUserByLogin(login string) (*User, error) {
 	return getUser(bson.D{{"login", login}})
-}
-
-func GetSession(id string) (*Session, error) {
-	session, exists := Sessions[id]
-	if !exists {
-		return nil, errors.New("Wrong sid")
-	}
-	return &session, nil
 }
 
 func GetUsers(count, page int) ([]User, error) {
@@ -138,11 +121,6 @@ func GetUsers(count, page int) ([]User, error) {
 	return userSlice, nil
 }
 
-func (session *Session) Delete() error {
-	delete(Sessions, session.Sid)
-	return nil
-}
-
 func (user *User) Delete() error {
 	//TODO : implement later
 	//delete(UuidUserIndex, user.Uuid)
@@ -156,7 +134,6 @@ func NewSession() *Session {
 		Sid:  id,
 		User: nil,
 	}
-	Sessions[id] = session
 	return &session
 }
 
@@ -216,6 +193,7 @@ func GetUserCount() (int64, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	return collection.CountDocuments(ctx, bson.D{})
 }
+
 func InitModels(clearDb bool) {
 	if clearDb {
 		collection, err := dbConnect()
@@ -225,5 +203,4 @@ func InitModels(clearDb bool) {
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		collection.DeleteMany(ctx, bson.D{})
 	}
-	Sessions = make(map[string]Session)
 }

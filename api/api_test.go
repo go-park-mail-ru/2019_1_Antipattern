@@ -11,11 +11,14 @@ import (
 	"testing"
 
 	"./models"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 )
 
 // User register
 
 func CheckSessionSetCookie(t *testing.T, user models.User, w *httptest.ResponseRecorder) {
+	secret := []byte("secret")
 	cookiesString := w.HeaderMap.Get("Set-Cookie")
 	if cookiesString == "" {
 		t.Errorf("Cookies not set")
@@ -24,13 +27,33 @@ func CheckSessionSetCookie(t *testing.T, user models.User, w *httptest.ResponseR
 	header := http.Header{}
 	header.Add("Cookie", cookiesString)
 	requestCooies := http.Request{Header: header}
-	sessionID, err := requestCooies.Cookie("sid")
+	tokenString, err := requestCooies.Cookie("token")
 	if err != nil {
 		t.Errorf("Session cookie not set")
 		return
 	}
+	token, err := jwt.Parse(tokenString.Value, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			t.Errorf("Can't get session!\n%s", err.Error())
 
-	session, err := models.GetSession(sessionID.Value)
+		}
+		return secret, nil
+	})
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// TODO: check type assertion
+		uid := claims["uid"].(string)
+		if uid != user.Uuid.Hex() {
+			t.Errorf("Session uuid is wrong.\nExpected:%s\nGot:%s", user.Uuid.Hex(), uid)
+			return
+		}
+
+	} else {
+		t.Errorf("Can't get session!\n%s", err.Error())
+		return
+	}
+
+	/*session, err := models.GetSession(sessionID.Value)
 	if err != nil {
 		t.Errorf("Can't get session!\n%s", err.Error())
 		return
@@ -38,8 +61,9 @@ func CheckSessionSetCookie(t *testing.T, user models.User, w *httptest.ResponseR
 	if session.User.Uuid != user.Uuid {
 		t.Errorf("Session uuid is wrong.\nExpected:%s\nGot:%s", user.Uuid.String(), session.User.Uuid.String())
 		return
-	}
+	}*/
 }
+
 func SendApiQuery(request *http.Request, expectedBody string) (*httptest.ResponseRecorder, error) {
 	response := httptest.NewRecorder()
 	router := NewRouter()
@@ -190,13 +214,22 @@ func FakeLoginAndAuth(request *http.Request) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	session := models.NewSession()
-	session.User = user
-	err = session.Save()
-	request.AddCookie(&http.Cookie{
-		Name:   "sid",
-		Secure: true,
-		Value:  session.Sid})
+	hmacSampleSecret := []byte("secret")
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"uid": user.Uuid.Hex(),
+		"sid": uuid.New().String(),
+	})
+	tokenString, err := token.SignedString(hmacSampleSecret)
+	if err != nil {
+		return nil, errors.New("Cannot fake login!")
+	}
+	cookie := &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		HttpOnly: true,
+	}
+	request.AddCookie(cookie)
 	return user, err
 }
 
