@@ -3,6 +3,8 @@ version: '2'
 services:
   api:
     build: './api'
+    ports:
+      - "8080:8080"
     volumes:
       - /opt/kpacubo/media:/opt/media
     networks:
@@ -15,8 +17,7 @@ services:
     networks:
       base:
         ipv4_address: 10.5.0.4
-    ports:
-      - "8080:8080"
+    
 networks:
   base:
     driver: bridge
