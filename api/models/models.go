@@ -32,7 +32,7 @@ type Session struct {
 }
 
 func dbConnect() (*mongo.Collection, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://api_db:27017"))
 
 	if err != nil {
 		return nil, err
