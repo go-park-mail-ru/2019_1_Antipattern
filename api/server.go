@@ -7,7 +7,6 @@ import (
 	"./handlers"
 	"./middleware"
 	"./models"
-
 	"github.com/gorilla/mux"
 )
 
@@ -15,17 +14,16 @@ func NewRouter() http.Handler {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/auth", middleware.SessionMiddleware(handlers.HandleLogin, false)).Methods("POST")
-	r.HandleFunc("/api/register", middleware.SessionMiddleware(handlers.HandleRegister, false)).Methods("POST")
-	r.HandleFunc("/api/upload_avatar", middleware.SessionMiddleware(handlers.HandleAvatarUpload, true)).Methods("POST")
-	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleUpdateUser, true)).Methods("PUT")
-	r.HandleFunc("/api/profile", middleware.SessionMiddleware(handlers.HandleGetUserData, true)).Methods("GET")
-	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", middleware.SessionMiddleware(handlers.HandleGetUsers, false)).Methods("GET")
-	r.HandleFunc("/api/login", middleware.SessionMiddleware(handlers.HandleLogout, true)).Methods("DELETE")
+	r.HandleFunc("/api/auth", handlers.HandleLogin).Methods("POST")
+	r.HandleFunc("/api/register", handlers.HandleRegister).Methods("POST")
+	r.HandleFunc("/api/upload_avatar", middleware.JWTMiddleware(handlers.HandleAvatarUpload)).Methods("POST")
+	r.HandleFunc("/api/profile", middleware.JWTMiddleware(handlers.HandleUpdateUser)).Methods("PUT")
+	r.HandleFunc("/api/profile", middleware.JWTMiddleware(handlers.HandleGetUserData)).Methods("GET")
+	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", handlers.HandleGetUsers).Methods("GET")
+	r.HandleFunc("/api/login", middleware.JWTMiddleware(handlers.HandleLogout)).Methods("DELETE")
 	return r
 }
 func main() {
-	models.InitModels()
-
-	log.Fatal(http.ListenAndServe(":8080", NewRouter()))
+	models.InitModels(false)
+	log.Fatal(http.ListenAndServe(":8080", middleware.PanicMiddleware(NewRouter())))
 }
