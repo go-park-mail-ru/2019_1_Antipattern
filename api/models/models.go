@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -31,28 +32,32 @@ type Session struct {
 	User *User
 }
 
-func dbConnect() (*mongo.Collection, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://api_db:27017"))
+var _client *mongo.Client
 
-	if err != nil {
-		return nil, err
-	}
-
+func dbConnect() (*mongo.Client, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	err = client.Connect(ctx)
-
-	if err != nil {
-		return nil, err
+	if _client == nil {
+		client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://api_db:27017"))
+		if err != nil {
+			return nil, err
+		}
+		_client = client
+		err = _client.Connect(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return client.Database("kpacubo").Collection("users"), nil
+	err := _client.Ping(ctx, nil)
+	return _client, err
 }
 
 func (user *User) Save() error {
-	collection, err := dbConnect()
+	client, err := dbConnect()
 	if err != nil {
 		return errors.New("Fail to connect db")
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	collection := client.Database("kpacubo").Collection("users")
 	// TODO(ukhachev): better update
 	_, err = collection.ReplaceOne(ctx, bson.D{{"_id", user.Uuid}}, user)
 
@@ -60,11 +65,12 @@ func (user *User) Save() error {
 }
 
 func getUser(findOptions bson.D) (*User, error) {
-	collection, err := dbConnect()
+	client, err := dbConnect()
 	if err != nil {
 		return nil, errors.New("Fail to connect db")
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	collection := client.Database("kpacubo").Collection("users")
 
 	user := User{}
 	err = collection.FindOne(ctx, findOptions).Decode(&user)
@@ -84,11 +90,12 @@ func GetUsers(count, page int) ([]User, error) {
 	if page < 1 {
 		return nil, errors.New("invalid page number")
 	}
-	collection, err := dbConnect()
+	client, err := dbConnect()
 	if err != nil {
 		return nil, errors.New("Fail to connect db")
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	collection := client.Database("kpacubo").Collection("users")
 
 	options := options.Find()
 	options.
@@ -149,11 +156,12 @@ func NewUser(login string, password string, email string) (*User, error) {
 	if email == "" {
 		return nil, errors.New("email")
 	}
-	collection, err := dbConnect()
+	client, err := dbConnect()
 	if err != nil {
 		return nil, errors.New("Fail to connect db")
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	collection := client.Database("kpacubo").Collection("users")
 
 	user := User{
 		Login:        login,
@@ -171,11 +179,14 @@ func NewUser(login string, password string, email string) (*User, error) {
 }
 
 func Auth(login string, password string) (*User, error) {
-	collection, err := dbConnect()
+	client, err := dbConnect()
 	if err != nil {
 		return nil, errors.New("Fail to connect db")
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+	collection := client.Database("kpacubo").Collection("users")
+
 	userBytes := collection.FindOne(ctx, bson.D{{"login", login}, {"password_hash", password}})
 
 	var user User
@@ -186,21 +197,37 @@ func Auth(login string, password string) (*User, error) {
 	return &user, nil
 }
 func GetUserCount() (int64, error) {
-	collection, err := dbConnect()
+	client, err := dbConnect()
 	if err != nil {
 		return 0, errors.New("Fail to connect db")
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	return collection.CountDocuments(ctx, bson.D{})
+	collection := client.Database("kpacubo").Collection("users")
+	count, err := collection.CountDocuments(ctx, bson.D{})
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func InitModels(clearDb bool) {
 	if clearDb {
-		collection, err := dbConnect()
+		client, err := dbConnect()
 		if err != nil {
+			fmt.Println("Failed to initialize")
 			return
 		}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+
+		collection := client.Database("kpacubo").Collection("users")
 		collection.DeleteMany(ctx, bson.D{})
+	}
+}
+
+func FinalizeModels() {
+	fmt.Println("Closing db connection")
+	if _client != nil {
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		_client.Disconnect(ctx)
 	}
 }
