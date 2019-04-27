@@ -101,13 +101,13 @@ func (client *Client) ReceiveMessage(messageChan chan *Message) {
 		}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		collection := dbClient.Database("kpacubo").Collection("messages")
+
+		message.UID = client.uid
 		result, err := collection.InsertOne(ctx, message)
 		if err != nil {
 			fmt.Println("Failed to create message")
 		}
 		message.ID = result.InsertedID.(primitive.ObjectID).Hex()
-		message.UID = client.uid
-
 		messageChan <- &message
 	}
 }
