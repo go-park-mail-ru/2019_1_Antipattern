@@ -118,7 +118,7 @@ func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Cl
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
 		CheckOrigin: func(r *http.Request) bool {
-			// TODO: Implemet
+			// TODO: Implement
 			return true
 		},
 	}
