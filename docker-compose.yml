@@ -26,7 +26,15 @@ services:
     networks:
       base:
         ipv4_address: 10.5.0.4
-
+  chat:
+    build: './chat'
+    volumes:
+      - /etc/letsencrypt:/cert
+    networks:
+      base:
+        ipv4_address: 10.5.0.8
+    ports: 
+      - "2000:2000"
   nginx:
     build: './nginx'
     ports: 

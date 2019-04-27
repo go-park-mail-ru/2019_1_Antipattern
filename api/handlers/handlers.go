@@ -13,6 +13,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	webJson "../json_structs"
 	"../models"
@@ -37,6 +38,8 @@ func setJWT(w http.ResponseWriter, user *models.User) error {
 		Name:     "token",
 		Value:    tokenString,
 		HttpOnly: true,
+		Domain:   ".kpacubo.xyz",
+		Path:     "/",
 	}
 	http.SetCookie(w, cookie)
 	return nil
@@ -280,6 +283,39 @@ func getRequest(marshaler json.Unmarshaler, r *http.Request) error {
 		return err
 	}
 	return nil
+}
+
+func HandleGetUserByID(w http.ResponseWriter, r *http.Request) {
+	uid, ok := mux.Vars(r)["id"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	response := webJson.Response{
+		Type:   "usinfo",
+		Status: "success",
+	}
+	objectID, err := primitive.ObjectIDFromHex(uid)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	user, err := models.GetUser(objectID)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	response.Payload = webJson.UserDataPayload{
+		Login:      user.Login,
+		Email:      "",
+		AvatarPath: user.Avatar,
+		Score:      user.Score,
+	}
+
+	byteResponse, _ := response.MarshalJSON()
+	w.Write(byteResponse)
+
 }
 
 func HandleLogout(w http.ResponseWriter, r *http.Request, user *models.User) {
