@@ -165,5 +165,5 @@ func main() {
 		upgraderHandler(w, r, clientChan, messageChan)
 	})
 
-	http.ListenAndServe(":2000", nil)
+	http.ListenAndServeTLS(":2000", "/cert/live/kpacubo.xyz/fullchain.pem", "/cert/live/kpacubo.xyz/privkey.pem", nil)
 }
