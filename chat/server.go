@@ -124,13 +124,18 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 			clients = append(clients, newClient)
 			fmt.Println("Client joined")
 		case message := <-messageChan:
-			for _, client := range clients {
+			for index, client := range clients {
 				if client.isConnected {
 					go client.SendMessage(message)
-				} else {
+				} else if len(clients) != 0 {
 					// Delete client
-					//clients[index] = clients[len(clients)-1]
-					//clients = clients[:len(clients)-1]
+					if len(clients) == 1 {
+						clients = clients[:0]
+					} else {
+						clients[index] = clients[len(clients)-1]
+						clients = clients[:len(clients)-1]
+					}
+
 				}
 			}
 		}
