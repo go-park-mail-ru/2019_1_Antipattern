@@ -4,8 +4,8 @@ ADD . ./
 
 RUN go get github.com/gorilla/websocket
 RUN go get github.com/dgrijalva/jwt-go
-#RUN go get go.mongodb.org/mongo-driver/mongo
-#RUN go get go.mongodb.org/mongo-driver/bson
+RUN go get go.mongodb.org/mongo-driver/mongo
+RUN go get go.mongodb.org/mongo-driver/bson
 
 RUN go build server.go 
 
