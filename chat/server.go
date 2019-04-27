@@ -138,6 +138,10 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 }
 
 func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
+	setupResponse(&w, r)
+	if (*r).Method == "OPTIONS" {
+		return
+	}
 	dbClient, err := dbConnect()
 	if err != nil {
 		fmt.Println("Failed to connect DB")
@@ -200,6 +204,13 @@ func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Cl
 	clientChan <- &client
 }
 
+func setupResponse(w *http.ResponseWriter, req *http.Request) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+	(*w).Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+}
+
 func InitDB() {
 	dbClient, err := dbConnect()
 	if err != nil {
@@ -223,4 +234,5 @@ func main() {
 	})
 
 	http.ListenAndServeTLS(":2000", "/cert/live/kpacubo.xyz/fullchain.pem", "/cert/live/kpacubo.xyz/privkey.pem", nil)
+
 }
