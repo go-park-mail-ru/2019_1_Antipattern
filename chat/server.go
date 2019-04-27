@@ -83,18 +83,18 @@ func (client *Client) ReceiveMessage(messageChan chan *Message) {
 			fmt.Printf(err.Error())
 			return
 		}
-		/*	dbClient, err := dbConnect()
-			if err != nil {
-				fmt.Println("Failed to connect DB")
-				return
-			}
-			ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-			collection := dbClient.Database("kpacubo").Collection("messages")
-			result, err := collection.InsertOne(ctx, message)
-			if err != nil {
-				fmt.Println("Failed to create message")
-			}
-			message.ID = result.InsertedID.(primitive.ObjectID).Hex()*/
+		/*dbClient, err := dbConnect()
+		if err != nil {
+			fmt.Println("Failed to connect DB")
+			return
+		}
+		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+		collection := dbClient.Database("kpacubo").Collection("messages")
+		result, err := collection.InsertOne(ctx, message)
+		if err != nil {
+			fmt.Println("Failed to create message")
+		}
+		message.ID = result.InsertedID.(primitive.ObjectID).Hex()*/
 		message.UID = client.uid
 
 		messageChan <- &message
@@ -118,14 +118,17 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 					go client.SendMessage(message)
 				} else {
 					// Delete client
-					clients[index] = clients[len(clients)-1]
-					clients = clients[:len(clients)-1]
+					//clients[index] = clients[len(clients)-1]
+					//clients = clients[:len(clients)-1]
 				}
 			}
 		}
 	}
 }
 
+func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
+
+}
 func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Client, messageChan chan *Message) {
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
