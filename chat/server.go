@@ -117,6 +117,10 @@ func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Cl
 	upgrader := websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
+		CheckOrigin: func(r *http.Request) bool {
+			// TODO: Implemet
+			return true
+		},
 	}
 
 	connection, err := upgrader.Upgrade(w, r, nil)
