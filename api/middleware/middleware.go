@@ -63,6 +63,5 @@ func JWTMiddleware(next func(http.ResponseWriter, *http.Request, *models.User)) 
 		} else {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
-
 	}
 }

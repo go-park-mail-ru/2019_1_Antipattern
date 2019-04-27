@@ -38,6 +38,7 @@ func setJWT(w http.ResponseWriter, user *models.User) error {
 		Name:     "token",
 		Value:    tokenString,
 		HttpOnly: true,
+		Domain:   ".kpacubo.xyz",
 	}
 	http.SetCookie(w, cookie)
 	return nil
