@@ -83,7 +83,20 @@ func (client *Client) ReceiveMessage(messageChan chan *Message) {
 			fmt.Printf(err.Error())
 			return
 		}
+		/*	dbClient, err := dbConnect()
+			if err != nil {
+				fmt.Println("Failed to connect DB")
+				return
+			}
+			ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+			collection := dbClient.Database("kpacubo").Collection("messages")
+			result, err := collection.InsertOne(ctx, message)
+			if err != nil {
+				fmt.Println("Failed to create message")
+			}
+			message.ID = result.InsertedID.(primitive.ObjectID).Hex()*/
 		message.UID = client.uid
+
 		messageChan <- &message
 	}
 }
@@ -133,9 +146,9 @@ func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Cl
 		"",
 		connection,
 	}
-	cookie, err := r.Cookie("token")
+	uid, err := JWTParse(w, r)
 	if err == nil {
-		client.uid = cookie.Value
+		client.uid = uid
 	}
 
 	go client.ReceiveMessage(messageChan)
