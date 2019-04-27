@@ -20,6 +20,7 @@ func NewRouter() http.Handler {
 	r.HandleFunc("/api/profile", middleware.JWTMiddleware(handlers.HandleUpdateUser)).Methods("PUT")
 	r.HandleFunc("/api/profile", middleware.JWTMiddleware(handlers.HandleGetUserData)).Methods("GET")
 	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", handlers.HandleGetUsers).Methods("GET")
+	r.HandleFunc("/api/user/{id:[0-9A-Fa-f]+}", handlers.HandleGetUserByID).Methods("GET")
 	r.HandleFunc("/api/login", middleware.JWTMiddleware(handlers.HandleLogout)).Methods("DELETE")
 	return r
 }

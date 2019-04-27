@@ -20,6 +20,7 @@ func PanicMiddleware(h http.Handler) http.Handler {
 		h.ServeHTTP(w, r)
 	})
 }
+
 func JWTMiddleware(next func(http.ResponseWriter, *http.Request, *models.User)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		secret := []byte("secret")
