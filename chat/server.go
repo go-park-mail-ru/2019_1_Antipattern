@@ -1,12 +1,19 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/websocket"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Message struct {
@@ -19,6 +26,10 @@ type Client struct {
 	isConnected bool
 	uid         string
 	conn        *websocket.Conn
+}
+type MessageJSON struct {
+	Status  string    `json:"status"`
+	Payload []Message `json:"payload"`
 }
 
 func JWTParse(w http.ResponseWriter, r *http.Request) (string, error) {
@@ -52,7 +63,7 @@ func JWTParse(w http.ResponseWriter, r *http.Request) (string, error) {
 	return "", nil
 }
 
-/*var _client *mongo.Client
+var _client *mongo.Client
 
 func dbConnect() (*mongo.Client, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
@@ -69,7 +80,7 @@ func dbConnect() (*mongo.Client, error) {
 	}
 	err := _client.Ping(ctx, nil)
 	return _client, err
-}*/
+}
 
 func (client *Client) ReceiveMessage(messageChan chan *Message) {
 	defer func() {
@@ -83,20 +94,20 @@ func (client *Client) ReceiveMessage(messageChan chan *Message) {
 			fmt.Printf(err.Error())
 			return
 		}
-		/*dbClient, err := dbConnect()
+		dbClient, err := dbConnect()
 		if err != nil {
 			fmt.Println("Failed to connect DB")
 			return
 		}
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		collection := dbClient.Database("kpacubo").Collection("messages")
+
+		message.UID = client.uid
 		result, err := collection.InsertOne(ctx, message)
 		if err != nil {
 			fmt.Println("Failed to create message")
 		}
-		message.ID = result.InsertedID.(primitive.ObjectID).Hex()*/
-		message.UID = client.uid
-
+		message.ID = result.InsertedID.(primitive.ObjectID).Hex()
 		messageChan <- &message
 	}
 }
@@ -127,6 +138,37 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 }
 
 func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
+	dbClient, err := dbConnect()
+	if err != nil {
+		fmt.Println("Failed to connect DB")
+		return
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	collection := dbClient.Database("kpacubo").Collection("messages")
+	options := options.Find()
+	options.SetLimit(int64(50)).SetSort(bson.M{"_id": -1})
+
+	cursor, err := collection.Find(ctx, bson.D{}, options)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	var messages []Message
+	for cursor.Next(ctx) {
+		m := Message{}
+		err = cursor.Decode(&m)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		messages = append(messages, m)
+	}
+	messageJSON := MessageJSON{
+		Status:  "success",
+		Payload: messages,
+	}
+	json, _ := json.Marshal(messageJSON)
+	w.Write(json)
 
 }
 func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Client, messageChan chan *Message) {
@@ -156,14 +198,26 @@ func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Cl
 
 	go client.ReceiveMessage(messageChan)
 	clientChan <- &client
-
 }
 
+func InitDB() {
+	dbClient, err := dbConnect()
+	if err != nil {
+		fmt.Println("Failed to connect DB")
+		return
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	collection := dbClient.Database("kpacubo").Collection("messages")
+	m := Message{Text: "Server started!", UID: ""}
+	collection.InsertOne(ctx, m)
+}
 func main() {
 	messageChan := make(chan *Message)
 	clientChan := make(chan *Client)
 	go ChatRoom(clientChan, messageChan)
+	InitDB()
 
+	http.HandleFunc("/messages", HandleGetMessages)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		upgraderHandler(w, r, clientChan, messageChan)
 	})
