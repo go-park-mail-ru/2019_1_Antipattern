@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"../auth"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -32,36 +32,14 @@ type MessageJSON struct {
 	Payload []Message `json:"payload"`
 }
 
-func JWTParse(w http.ResponseWriter, r *http.Request) (string, error) {
-	secret := []byte("secret")
-	cookie, err := r.Cookie("token")
-	if err != nil {
-		return "", nil
-	}
+var authProvider auth.JWTProvider = auth.JWTProvider{
+	ServerAddress: "identity_service:8081",
+	Secure:        false,
+	AuthDomain:    ".kpacubo.xyz",
+}
 
-	token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return secret, nil
-	})
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return "", err
-	}
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		uid, ok := claims["uid"].(string)
-		if !ok {
-			w.WriteHeader(http.StatusUnauthorized)
-			return "", err
-		}
-		if uid == "" {
-			w.WriteHeader(http.StatusUnauthorized)
-			return "", err
-		}
-		return uid, nil
-	}
-	return "", nil
+func ParseAuth(r *http.Request) (string, error) {
+	return authProvider.GetUUID(r)
 }
 
 var _client *mongo.Client
@@ -196,7 +174,7 @@ func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Cl
 		"",
 		connection,
 	}
-	uid, err := JWTParse(w, r)
+	uid, err := ParseAuth(r)
 	if err == nil {
 		client.uid = uid
 	}

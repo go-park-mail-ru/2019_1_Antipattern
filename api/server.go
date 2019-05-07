@@ -27,6 +27,7 @@ func NewRouter() http.Handler {
 	authProvider := auth.JWTProvider{
 		ServerAddress: "identity_service:8081",
 		Secure:        false,
+		AuthDomain:    ".kpacubo.xyz",
 	}
 	r.HandleFunc("/api/auth", HandlerWrapperUnauthorized(handlers.HandleLogin, authProvider)).Methods("POST")
 	r.HandleFunc("/api/register", HandlerWrapperUnauthorized(handlers.HandleRegister, authProvider)).Methods("POST")

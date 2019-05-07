@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -97,6 +98,39 @@ func (provider JWTProvider) AuthMiddleware(next func(w http.ResponseWriter, r *h
 	}
 }
 
+func (provider JWTProvider) GetUUID(r *http.Request) (string, error) {
+	acccessCookie, err := r.Cookie(authCookieName)
+	refreshCookie, err := r.Cookie(refreshCookieName)
+	if err != nil {
+		return "", err
+	}
+	conn, err := grpc.Dial(provider.ServerAddress, grpc.WithInsecure())
+
+	if err != nil {
+		log.Printf("Can't connect to authority server: %v", err)
+		return "", err
+	}
+	defer conn.Close()
+	c := pb.NewIdentifierClient(conn)
+
+	response, err := c.ParseToken(context.Background(), &pb.ParseTokenRequest{
+		AccessToken:  acccessCookie.Value,
+		RefreshToken: refreshCookie.Value,
+	})
+
+	if err != nil {
+		log.Printf("Can't parse auth token: %v", err)
+		return "", err
+	}
+	switch response.Status {
+	case pb.ParseTokenStatusCode_SUCCESS:
+		return response.Uid, nil
+	case pb.ParseTokenStatusCode_INVALID:
+		return "", errors.New("unauthorized")
+	default:
+		return "", errors.New("unauthorized")
+	}
+}
 func (provider JWTProvider) DeleteUserSession(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
