@@ -36,7 +36,9 @@ services:
       base:
         ipv4_address: 10.5.0.9
   chat:
-    build: './chat'
+    build: 
+      dockerfile: './chat/Dockerfile'
+      context: '.'
     volumes:
       - /etc/letsencrypt:/cert
     networks:
