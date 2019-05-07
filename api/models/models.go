@@ -37,7 +37,7 @@ var _client *mongo.Client
 func dbConnect() (*mongo.Client, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	if _client == nil {
-		client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+		client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://api_db:27017"))
 		if err != nil {
 			return nil, err
 		}

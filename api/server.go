@@ -25,7 +25,7 @@ func NewRouter() http.Handler {
 
 	r := mux.NewRouter()
 	authProvider := auth.JWTProvider{
-		ServerAddress: "localhost:8081",
+		ServerAddress: "identity_service:8081",
 		Secure:        false,
 	}
 	r.HandleFunc("/api/auth", HandlerWrapperUnauthorized(handlers.HandleLogin, authProvider)).Methods("POST")

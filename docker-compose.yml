@@ -54,6 +54,12 @@ services:
     networks:
       base:
         ipv4_address: 10.5.0.6
+  identity_service:
+    build: ./identity_service
+    networks:
+      base:
+        ipv4_address: 10.5.0.18
+
 
 networks:
   base:
