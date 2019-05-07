@@ -4,24 +4,38 @@ import (
 	"log"
 	"net/http"
 
+	"../auth"
 	"./handlers"
 	"./middleware"
 	"./models"
 	"github.com/gorilla/mux"
 )
 
+func HandlerWrapperUnauthorized(handler func(w http.ResponseWriter, r *http.Request, authProvider auth.Provider), authProvider auth.Provider) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		handler(w, r, authProvider)
+	}
+}
+func HandlerWrapperAuthorized(handler func(w http.ResponseWriter, r *http.Request, user *models.User, authProvider auth.Provider), authProvider auth.Provider) func(w http.ResponseWriter, r *http.Request, user *models.User) {
+	return func(w http.ResponseWriter, r *http.Request, user *models.User) {
+		handler(w, r, user, authProvider)
+	}
+}
 func NewRouter() http.Handler {
 
 	r := mux.NewRouter()
-
-	r.HandleFunc("/api/auth", handlers.HandleLogin).Methods("POST")
-	r.HandleFunc("/api/register", handlers.HandleRegister).Methods("POST")
-	r.HandleFunc("/api/upload_avatar", middleware.JWTMiddleware(handlers.HandleAvatarUpload)).Methods("POST")
-	r.HandleFunc("/api/profile", middleware.JWTMiddleware(handlers.HandleUpdateUser)).Methods("PUT")
-	r.HandleFunc("/api/profile", middleware.JWTMiddleware(handlers.HandleGetUserData)).Methods("GET")
+	authProvider := auth.JWTProvider{
+		ServerAddress: "localhost:8081",
+		Secure:        false,
+	}
+	r.HandleFunc("/api/auth", HandlerWrapperUnauthorized(handlers.HandleLogin, authProvider)).Methods("POST")
+	r.HandleFunc("/api/register", HandlerWrapperUnauthorized(handlers.HandleRegister, authProvider)).Methods("POST")
+	r.HandleFunc("/api/upload_avatar", middleware.AuthMiddleware(handlers.HandleAvatarUpload, authProvider)).Methods("POST")
+	r.HandleFunc("/api/profile", middleware.AuthMiddleware(handlers.HandleUpdateUser, authProvider)).Methods("PUT")
+	r.HandleFunc("/api/profile", middleware.AuthMiddleware(handlers.HandleGetUserData, authProvider)).Methods("GET")
 	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", handlers.HandleGetUsers).Methods("GET")
 	r.HandleFunc("/api/user/{id:[0-9A-Fa-f]+}", handlers.HandleGetUserByID).Methods("GET")
-	r.HandleFunc("/api/login", middleware.JWTMiddleware(handlers.HandleLogout)).Methods("DELETE")
+	r.HandleFunc("/api/login", middleware.AuthMiddleware(HandlerWrapperAuthorized(handlers.HandleLogout, authProvider), authProvider)).Methods("DELETE")
 	return r
 }
 func main() {

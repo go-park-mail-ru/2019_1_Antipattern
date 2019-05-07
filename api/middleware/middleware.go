@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"../../auth"
 	"../models"
-	"github.com/dgrijalva/jwt-go"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -21,47 +21,18 @@ func PanicMiddleware(h http.Handler) http.Handler {
 	})
 }
 
-func JWTMiddleware(next func(http.ResponseWriter, *http.Request, *models.User)) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		secret := []byte("secret")
-		cookie, err := r.Cookie("token")
+func AuthMiddleware(next func(http.ResponseWriter, *http.Request, *models.User), authProvider auth.Provider) http.HandlerFunc {
+	return authProvider.AuthMiddleware(func(w http.ResponseWriter, r *http.Request, uid string) {
+		objectID, err := primitive.ObjectIDFromHex(uid)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-			return secret, nil
-		})
+		user, err := models.GetUser(objectID)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-			uid, ok := claims["uid"].(string)
-			if !ok {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			if uid == "" {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			objectID, err := primitive.ObjectIDFromHex(uid)
-			if err != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			user, err := models.GetUser(objectID)
-			if err != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			next(w, r, user)
-		} else {
-			w.WriteHeader(http.StatusUnauthorized)
-		}
-	}
+		next(w, r, user)
+	})
 }

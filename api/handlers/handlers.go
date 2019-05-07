@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,42 +9,19 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/dgrijalva/jwt-go"
+	"../../auth"
+	webJson "../json_structs"
+	"../models"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
-	webJson "../json_structs"
-	"../models"
 )
 
-func setJWT(w http.ResponseWriter, user *models.User) error {
-	secret := []byte("secret")
-	uidHex := ""
-	if user != nil {
-		uidHex = user.Uuid.Hex()
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"uid": uidHex,
-		"sid": uuid.New().String(),
-	})
-	tokenString, err := token.SignedString(secret)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return errors.New("Failed to create token")
-	}
-	cookie := &http.Cookie{
-		Name:     "token",
-		Value:    tokenString,
-		HttpOnly: true,
-		Domain:   ".kpacubo.xyz",
-		Path:     "/",
-	}
-	http.SetCookie(w, cookie)
-	return nil
+func setAuth(w http.ResponseWriter, r *http.Request, user *models.User, authProvider auth.Provider) error {
+	return authProvider.SetAuthCookie(w, r, user.Uuid.Hex())
 }
 
-func HandleLogin(w http.ResponseWriter, r *http.Request) {
+func HandleLogin(w http.ResponseWriter, r *http.Request, authProvider auth.Provider) {
 	userData := &webJson.UsrRequest{}
 
 	err := getRequest(userData, r)
@@ -67,7 +43,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 			Field:   wrong,
 		}
 	} else {
-		setJWT(w, user)
+		setAuth(w, r, user, authProvider)
 		response.Status = "success"
 	}
 
@@ -88,7 +64,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 // request must contain post form:
 // 	login, password, email
 // Writes status json to response
-func HandleRegister(w http.ResponseWriter, r *http.Request) {
+func HandleRegister(w http.ResponseWriter, r *http.Request, authProvider auth.Provider) {
 	userData := &webJson.UsrRequest{}
 
 	err := getRequest(userData, r)
@@ -103,7 +79,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 
 	user, err := models.NewUser(userData.Login, userData.Password, userData.Email)
 	if err == nil {
-		setJWT(w, user)
+		setAuth(w, r, user, authProvider)
 		response.Status = "success"
 		response.Payload = webJson.UserDataPayload{
 			Login:      user.Login,
@@ -318,6 +294,6 @@ func HandleGetUserByID(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func HandleLogout(w http.ResponseWriter, r *http.Request, user *models.User) {
-	setJWT(w, nil)
+func HandleLogout(w http.ResponseWriter, r *http.Request, user *models.User, authProvider auth.Provider) {
+	setAuth(w, r, user, authProvider)
 }

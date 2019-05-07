@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+//option java_multiple_files = true;
+//option java_package = "io.grpc.examples.helloworld";
+//option java_outer_classname = "HelloWorldProto";
+
+package identity;
+
+
+enum ParseTokenStatusCode {
+  SUCCESS = 0;
+  INVALID = 1;
+  OUTDATED_ACCESS = 2;
+  OUTDATED_REFRESH = 3;
+}
+
+// Isssue token
+message IssueTokenRequest {
+  string uid = 1;
+  string login = 2;
+}
+
+message IssueTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+// Parse token 
+message ParseTokenRequest {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+
+message ParseTokenResponse {
+  string uid = 1;
+  string login = 2;
+  ParseTokenStatusCode status = 3;
+}
+
+// Revoke user tokens
+message RevokeUserTokensRequest {
+  string uid = 1;
+}
+
+// Revoke token
+message RevokeTokenRequest {
+  string access_token = 1;
+  string refresh_token = 2;
+}
+message RevokeTokenResponse {
+  enum RevokeTokenStatusCode {
+    SUCCESS = 0;
+    FAIL = 1;
+  }
+  RevokeTokenStatusCode code = 1;
+}
+service Identifier {
+  rpc IssueToken(IssueTokenRequest) returns (IssueTokenResponse) {}
+  rpc ParseToken(ParseTokenRequest) returns (ParseTokenResponse) {}
+  rpc RevokeToken(RevokeTokenRequest) returns (RevokeTokenResponse) {}
+  rpc RevokeUserTokens(RevokeUserTokensRequest) returns (RevokeTokenResponse) {}
+}
+
+
