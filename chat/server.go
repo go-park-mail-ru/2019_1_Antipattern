@@ -144,7 +144,7 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
 		return
-	}``
+	}
 	dbClient, err := dbConnect()
 	if err != nil {
 		fmt.Println("Failed to connect DB")
