@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	pb "../api_struct"
-	"../auth"
+	"../providers/auth"
 	"./handlers"
 	"./middleware"
 	"./models"
