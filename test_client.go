@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	pb "./identity_struct"
+	pb "./api_struct"
 	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
 )
@@ -16,11 +16,11 @@ func main() {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	c := pb.NewIdentifierClient(conn)
+	c := pb.NewAPIClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	r, err := c.IssueToken(ctx, &pb.IssueTokenRequest{Uid: "some hex"})
+	r, err := c.GetUsers(ctx, &pb.GetUsersRequest{Uid: "some hex"})
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}

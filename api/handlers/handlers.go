@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"../../auth"
+	"../../providers/auth"
 	webJson "../json_structs"
 	"../models"
 	"github.com/google/uuid"

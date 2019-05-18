@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
 	"time"
 
-	"../auth"
+	"../providers/auth"
+	"../providers/user_data"
 	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -36,6 +38,10 @@ var authProvider auth.JWTProvider = auth.JWTProvider{
 	ServerAddress: "identity_service:8081",
 	Secure:        false,
 	AuthDomain:    ".kpacubo.xyz",
+}
+
+var apiProvider user_data.GrpcProvider = user_data.GrpcProvider{
+	ServerAddress: "api:8081",
 }
 
 func ParseAuth(r *http.Request) (string, error) {
@@ -96,20 +102,25 @@ func (client *Client) SendMessage(message *Message) {
 }
 
 func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
-	var clients []*Client
+	var mtx sync.Mutex
+	clients := make(map[string]*Client)
 	for {
 		select {
 		case newClient := <-clientChan:
-			clients = append(clients, newClient)
+			clients[newClient.uid] = newClient
+			newClient.conn.SetCloseHandler(func(code int, text string) error {
+				mtx.Lock()
+				defer mtx.Unlock()
+				delete(clients, newClient.uid)
+				return nil
+			})
 			fmt.Println("Client joined")
 		case message := <-messageChan:
+			mtx.Lock()
+			defer mtx.Unlock()
 			for _, client := range clients {
 				if client.isConnected {
 					go client.SendMessage(message)
-				} else {
-					// Delete client
-					//clients[index] = clients[len(clients)-1]
-					//clients = clients[:len(clients)-1]
 				}
 			}
 		}
@@ -201,6 +212,7 @@ func InitDB() {
 	m := Message{Text: "Server started!", UID: ""}
 	collection.InsertOne(ctx, m)
 }
+
 func main() {
 	messageChan := make(chan *Message)
 	clientChan := make(chan *Client)

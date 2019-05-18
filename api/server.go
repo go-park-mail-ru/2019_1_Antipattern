@@ -1,15 +1,34 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net"
 	"net/http"
 
+	pb "../api_struct"
 	"../auth"
 	"./handlers"
 	"./middleware"
 	"./models"
 	"github.com/gorilla/mux"
+	"google.golang.org/grpc"
 )
+
+type server struct{}
+
+func (s *server) GetUsers(ctx context.Context, request *pb.GetUsersRequest) (*pb.GetUsersResponse, error) {
+	users, err := models.GetUsersByIds(request.Uid)
+	if err != nil {
+		return nil, err
+	}
+	response := pb.GetUsersResponse{}
+	for _, user := range users {
+		data := pb.GetUsersResponse_UserData{Uid: user.Uuid.Hex(), Login: user.Login, Avatar: user.Avatar}
+		response.Data = append(response.Data, &data)
+	}
+	return &response, nil
+}
 
 func HandlerWrapperUnauthorized(handler func(w http.ResponseWriter, r *http.Request, authProvider auth.Provider), authProvider auth.Provider) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +60,17 @@ func NewRouter() http.Handler {
 }
 func main() {
 	models.InitModels(false)
+	listener, err := net.Listen("tcp", ":8081")
+	log.Printf("API grpc server listening on 8081")
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	s := grpc.NewServer()
+	pb.RegisterAPIServer(s, &server{})
+	if err := s.Serve(listener); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+
 	defer models.FinalizeModels()
 	log.Fatal(http.ListenAndServe(":8080", middleware.PanicMiddleware(NewRouter())))
 }

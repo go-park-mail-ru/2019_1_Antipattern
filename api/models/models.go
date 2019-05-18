@@ -224,6 +224,47 @@ func InitModels(clearDb bool) {
 	}
 }
 
+func GetUsersByIds(ids []string) ([]User, error) {
+	client, err := dbConnect()
+	if err != nil {
+		return nil, errors.New("Fail to connect db")
+	}
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	collection := client.Database("kpacubo").Collection("users")
+	//{ uid: { $in:["red", "blank"]} }
+	var uids []primitive.ObjectID
+	for _, id := range ids {
+		objectID, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return nil, err
+		}
+		uids = append(uids, objectID)
+	}
+	cursor, err := collection.Find(ctx, bson.M{"_id": bson.M{"$in": uids}})
+	if err != nil {
+		return nil, errors.New("DB error")
+	}
+	if !cursor.Next(ctx) {
+		return nil, errors.New("not enough users")
+	}
+	defer cursor.Close(ctx)
+
+	var userSlice []User
+	for {
+		var user User
+		err = cursor.Decode(&user)
+		if err != nil {
+			return nil, err
+		}
+		userSlice = append(userSlice, user)
+		if !cursor.Next(ctx) {
+			break
+		}
+	}
+	return userSlice, nil
+
+}
+
 func FinalizeModels() {
 	fmt.Println("Closing db connection")
 	if _client != nil {
