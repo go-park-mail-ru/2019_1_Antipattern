@@ -8,7 +8,7 @@ RUN go get google.golang.org/grpc
 
 COPY ./identity_service/ ./identity_service/
 COPY ./identity_struct ./identity_struct
-COPY ./auth ./auth
+COPY ./providers ./providers
 
 RUN go build ./identity_service/server.go
 

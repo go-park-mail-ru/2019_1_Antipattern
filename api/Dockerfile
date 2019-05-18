@@ -14,7 +14,7 @@ RUN go get google.golang.org/grpc
 
 COPY ./api ./api
 COPY ./identity_struct ./identity_struct
-COPY ./auth ./auth
+COPY ./providers ./providers
 
 RUN go build ./api/server.go 
 EXPOSE 8080
