@@ -181,16 +181,15 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 		for _, user := range users {
 			userMap[user.Uid] = user
 		}
-	}
-	for _, msg := range messages {
-		if msg.UID != "" {
-			user, ok := userMap[msg.UID]
-			if ok {
-				msg.Login = user.Login
-				msg.Avatar = user.Avatar
+		for _, msg := range messages {
+			if msg.UID != "" {
+				user, ok := userMap[msg.UID]
+				if ok {
+					msg.Login = user.Login
+					msg.Avatar = user.Avatar
+				}
 			}
 		}
-
 	}
 	messageJSON := MessageJSON{
 		Status:  "success",
