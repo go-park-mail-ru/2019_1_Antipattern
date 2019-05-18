@@ -126,12 +126,13 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 			}
 		case message := <-messageChan:
 			mtx.Lock()
-			defer mtx.Unlock()
+
 			for _, client := range clients {
 				if client.isConnected {
 					go client.SendMessage(message)
 				}
 			}
+			mtx.Unlock()
 		}
 	}
 }
