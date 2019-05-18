@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"../../auth"
+	"../../providers/auth"
 	"../models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
