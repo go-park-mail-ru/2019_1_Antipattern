@@ -27,10 +27,11 @@ type Message struct {
 
 type Client struct {
 	isConnected bool
-	uid         string
-	conn        *websocket.Conn
-	login       string
-	avatar      string
+
+	uid    string
+	login  string
+	avatar string
+	conn   *websocket.Conn
 }
 type MessageJSON struct {
 	Status  string    `json:"status"`
@@ -118,7 +119,7 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 			fmt.Println("Client joined")
 			userData, err := apiProvider.GetUsers([]string{newClient.uid})
 
-			if err != nil && len(userData) != 0 {
+			if err == nil && len(userData) != 0 {
 				newClient.login = userData[0].Login
 				newClient.avatar = userData[0].Avatar
 
@@ -143,7 +144,7 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 	setupResponse(&w, r)
 	if (*r).Method == "OPTIONS" {
 		return
-	}
+	}``
 	dbClient, err := dbConnect()
 	if err != nil {
 		fmt.Println("Failed to connect DB")
@@ -215,9 +216,8 @@ func upgraderHandler(w http.ResponseWriter, r *http.Request, clientChan chan *Cl
 		return
 	}
 	client := Client{
-		true,
-		"",
-		connection,
+		isConnected: true,
+		conn:        connection,
 	}
 	uid, err := ParseAuth(r)
 	if err == nil {

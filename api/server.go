@@ -67,7 +67,7 @@ func main() {
 	}
 	s := grpc.NewServer()
 	pb.RegisterAPIServer(s, &server{})
-	defer s.Serve(listener)
+	go s.Serve(listener)
 
 	defer models.FinalizeModels()
 	log.Fatal(http.ListenAndServe(":8080", middleware.PanicMiddleware(NewRouter())))
