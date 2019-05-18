@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
 	"time"
 
 	"../providers/auth"
@@ -102,15 +101,12 @@ func (client *Client) SendMessage(message *Message) {
 }
 
 func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
-	var mtx sync.Mutex
 	clients := make(map[string]*Client)
 	for {
 		select {
 		case newClient := <-clientChan:
 			clients[newClient.uid] = newClient
 			newClient.conn.SetCloseHandler(func(code int, text string) error {
-				mtx.Lock()
-				defer mtx.Unlock()
 				delete(clients, newClient.uid)
 				return nil
 			})
@@ -125,14 +121,11 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 				}
 			}
 		case message := <-messageChan:
-			mtx.Lock()
-
 			for _, client := range clients {
 				if client.isConnected {
 					go client.SendMessage(message)
 				}
 			}
-			mtx.Unlock()
 		}
 	}
 }
