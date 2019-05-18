@@ -18,15 +18,19 @@ import (
 )
 
 type Message struct {
-	ID   string `json:"_id,omitempty"`
-	UID  string `json:"uid"`
-	Text string `json:"text"`
+	ID     string `json:"_id,omitempty"`
+	Login  string `json:"login,omitempty"`
+	Avatar string `json:"avatar,omitempty"`
+	UID    string `json:"uid"`
+	Text   string `json:"text"`
 }
 
 type Client struct {
 	isConnected bool
 	uid         string
 	conn        *websocket.Conn
+	login       string
+	avatar      string
 }
 type MessageJSON struct {
 	Status  string    `json:"status"`
@@ -106,13 +110,18 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 		select {
 		case newClient := <-clientChan:
 			clients[newClient.uid] = newClient
+
 			newClient.conn.SetCloseHandler(func(code int, text string) error {
 				delete(clients, newClient.uid)
 				return nil
 			})
 			fmt.Println("Client joined")
 			userData, err := apiProvider.GetUsers([]string{newClient.uid})
+
 			if err != nil && len(userData) != 0 {
+				newClient.login = userData[0].Login
+				newClient.avatar = userData[0].Avatar
+
 				for _, client := range clients {
 					if client.isConnected {
 						message := Message{UID: "", Text: userData[0].Login + " joined"}
@@ -140,7 +149,7 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Failed to connect DB")
 		return
 	}
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
 	collection := dbClient.Database("kpacubo").Collection("messages")
 	options := options.Find()
 	options.SetLimit(int64(50)).SetSort(bson.M{"_id": -1})
@@ -151,6 +160,7 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var messages []Message
+	var uids []string
 	for cursor.Next(ctx) {
 		m := Message{}
 		err = cursor.Decode(&m)
@@ -158,7 +168,28 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		if m.UID != "" {
+			uids = append(uids, m.UID)
+		}
+
 		messages = append(messages, m)
+	}
+	users, err := apiProvider.GetUsers(uids)
+	userMap := make(map[string]*user_data.User)
+	if err == nil {
+		for _, user := range users {
+			userMap[user.Uid] = user
+		}
+	}
+	for _, msg := range messages {
+		if msg.UID != "" {
+			user, ok := userMap[msg.UID]
+			if ok {
+				msg.Login = user.Login
+				msg.Avatar = user.Avatar
+			}
+		}
+
 	}
 	messageJSON := MessageJSON{
 		Status:  "success",
