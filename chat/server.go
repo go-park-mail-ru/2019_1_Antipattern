@@ -34,8 +34,8 @@ type Client struct {
 	conn   *websocket.Conn
 }
 type MessageJSON struct {
-	Status  string    `json:"status"`
-	Payload []Message `json:"payload"`
+	Status  string     `json:"status"`
+	Payload []*Message `json:"payload"`
 }
 
 var authProvider auth.JWTProvider = auth.JWTProvider{
@@ -160,7 +160,7 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	var messages []Message
+	var messages []*Message
 	var uids []string
 	for cursor.Next(ctx) {
 		m := Message{}
@@ -173,7 +173,7 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 			uids = append(uids, m.UID)
 		}
 
-		messages = append(messages, m)
+		messages = append(messages, &m)
 	}
 	users, err := apiProvider.GetUsers(uids)
 	userMap := make(map[string]*user_data.User)
