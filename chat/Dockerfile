@@ -12,6 +12,7 @@ RUN go get google.golang.org/grpc
 COPY ./chat/ ./chat/
 COPY ./identity_struct ./identity_struct
 COPY ./providers ./providers
+COPY ./api_struct ./api_struct
 
 RUN go build ./chat/server.go
 
