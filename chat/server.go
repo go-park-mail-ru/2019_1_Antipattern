@@ -83,15 +83,21 @@ func (client *Client) ReceiveMessage(messageChan chan *Message) {
 			fmt.Printf(err.Error())
 			return
 		}
+
 		dbClient, err := dbConnect()
 		if err != nil {
 			fmt.Println("Failed to connect DB")
 			return
 		}
+
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 		collection := dbClient.Database("kpacubo").Collection("messages")
 
 		message.UID = client.uid
+		if client.uid != "" {
+			message.Login = client.login
+			message.Avatar = client.avatar
+		}
 		result, err := collection.InsertOne(ctx, message)
 		if err != nil {
 			fmt.Println("Failed to create message")
@@ -122,13 +128,6 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 			if err == nil && len(userData) != 0 {
 				newClient.login = userData[0].Login
 				newClient.avatar = userData[0].Avatar
-
-				for _, client := range clients {
-					if client.isConnected {
-						message := Message{UID: "", Text: userData[0].Login + " joined"}
-						go client.SendMessage(&message)
-					}
-				}
 			}
 		case message := <-messageChan:
 			for _, client := range clients {
