@@ -115,6 +115,15 @@ func ChatRoom(clientChan chan *Client, messageChan chan *Message) {
 				return nil
 			})
 			fmt.Println("Client joined")
+			userData, err := apiProvider.GetUsers([]string{newClient.uid})
+			if err != nil && len(userData) != 0 {
+				for _, client := range clients {
+					if client.isConnected {
+						message := Message{UID: "", Text: userData[0].Login + " joined"}
+						go client.SendMessage(&message)
+					}
+				}
+			}
 		case message := <-messageChan:
 			mtx.Lock()
 			defer mtx.Unlock()
