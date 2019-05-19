@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"../providers/auth"
@@ -255,7 +256,11 @@ func main() {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		upgraderHandler(w, r, clientChan, messageChan)
 	})
-
-	http.ListenAndServeTLS(":2000", "/cert/live/kpacubo.xyz/fullchain.pem", "/cert/live/kpacubo.xyz/privkey.pem", nil)
+	useTLS := os.Getenv("USE_TLS")
+	if useTLS == "1" {
+		http.ListenAndServeTLS(":2000", "/cert/live/kpacubo.xyz/fullchain.pem", "/cert/live/kpacubo.xyz/privkey.pem", nil)
+	} else {
+		http.ListenAndServe(":2000", nil)
+	}
 
 }

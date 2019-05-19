@@ -2,22 +2,53 @@ version: '2'
 
 services:
   api:
-    build: './api'
-    ports:
-      - "8080:8080"
+    build: 
+      dockerfile: './api/Dockerfile'
+      context: '.'
     volumes:
-      - /opt/kpacubo/media:/opt/media
+      - ~/kpacubo/media:/opt/media
     networks:
       base:
         ipv4_address: 10.5.0.2
+    ports: 
+      - "8080:8080"
+  
+  swagger:
+    build: './swagger'
+    volumes:
+      - ./swagger:/swagger
+    environment:
+      - SWAGGER_JSON=/swagger/config.json
+    networks:
+      base:
+        ipv4_address: 10.5.0.3
+
   api_db:
     build: './api/db'
     volumes:
-      - /var/lib/mongodb/:/var/lib/mongodb
+      - ~/kpacubo/mongodb_api/:/var/lib/mongodb
     networks:
       base:
         ipv4_address: 10.5.0.4
-    
+  chat_db:
+    build: './chat/db'
+    volumes:
+      - ~/kpacubo/mongodb_chat/:/var/lib/mongodb
+    networks:
+      base:
+        ipv4_address: 10.5.0.9
+  chat:
+    build:
+      dockerfile: './chat/Dockerfile'
+      context: '.'
+    environment:
+      - USE_TLS=0
+    networks:
+      base:
+        ipv4_address: 10.5.0.8
+    ports: 
+      - "2000:2000"
+
 networks:
   base:
     driver: bridge
