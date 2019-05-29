@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"time"
 
@@ -18,7 +19,6 @@ import (
 
 type Config struct {
 	AuthPort		string							`json:"auth_port"`
-	Secret			string							`json:"secret"`
 }
 
 
@@ -92,7 +92,12 @@ func main() {
 		log.Fatalf("Unmarshalln't: %v", err)
 	}
 
-	secret = []byte(config.Secret)
+	secretKey := os.Getenv("SECRET");
+	if secretKey == "" {
+		log.Fatalf("Failed to get SECRET")
+	}
+
+	secret = []byte(secret)
 
 	listener, err := net.Listen("tcp", ":" + config.AuthPort)
 	log.Printf("Identity server listening on " + config.AuthPort)
