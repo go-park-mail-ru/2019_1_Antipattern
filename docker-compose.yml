@@ -39,6 +39,8 @@ services:
     build: 
       dockerfile: './chat/Dockerfile'
       context: '.'
+    environment:
+      - USE_TLS=1
     volumes:
       - /etc/letsencrypt:/cert
     networks:
