@@ -33,7 +33,7 @@ type Config struct {
 }
 
 var (
-	config *Config
+	config = &Config{}
 )
 
 type server struct{}
@@ -80,8 +80,6 @@ func NewRouter() http.Handler {
 	return r
 }
 func main() {
-	config = &Config{}
-
 	configBytes, err := ioutil.ReadFile("config.json")
 	if err != nil {
 		log.Fatalf("Readn't: %v", err)

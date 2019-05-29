@@ -1,0 +1,14 @@
+{
+  "port" : "2000",
+  "auth_port": "8081",
+  "api_prefix": "api",
+  "db_name": "kpacubo",
+  "ws_route": "/ws",
+  "message_route": "/messages",
+  "server_address": "identity_service",
+  "auth_domain": ".kpacubo.xyz",
+  "mongo_addr": "mongodb://chat_db:27017",
+  "coll_name": "messages",
+  "cert_file": "/cert/live/kpacubo.xyz/fullchain.pem",
+  "key_file": "/cert/live/kpacubo.xyz/privkey.pem"
+}

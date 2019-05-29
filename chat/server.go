@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,25 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+type Config struct {
+	Port			string							`json:"port"`
+	AuthPort		string							`json:"auth_port"`
+	APIPrefix		string							`json:"api_prefix"`
+	DBName			string							`json:"db_name"`
+	WSRoute			string							`json:"ws_route"`
+	MessageRoute	string							`json:"message_route"`
+	ServerAddress	string							`json:"server_address"`
+	AuthDomain		string							`json:"auth_domain"`
+	MongoAddr		string							`json:"mongo_addr"`
+	CollName		string							`json:"coll_name"`
+	CertFile		string							`json:"cert_file"`
+	KeyFile			string							`json:"key_file"`
+}
+
+var (
+	config = &Config{}
 )
 
 type Message struct {
@@ -40,13 +60,13 @@ type MessageJSON struct {
 }
 
 var authProvider auth.JWTProvider = auth.JWTProvider{
-	ServerAddress: "identity_service:8081",
+	ServerAddress: config.ServerAddress + config.AuthDomain,
 	Secure:        false,
-	AuthDomain:    ".kpacubo.xyz",
+	AuthDomain:    config.AuthDomain,
 }
 
 var apiProvider user_data.GrpcProvider = user_data.GrpcProvider{
-	ServerAddress: "api:8081",
+	ServerAddress: config.APIPrefix + config.AuthPort,
 }
 
 func ParseAuth(r *http.Request) (string, error) {
@@ -58,7 +78,7 @@ var _client *mongo.Client
 func dbConnect() (*mongo.Client, error) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	if _client == nil {
-		client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://chat_db:27017"))
+		client, err := mongo.NewClient(options.Client().ApplyURI(config.MongoAddr))
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +112,7 @@ func (client *Client) ReceiveMessage(messageChan chan *Message) {
 		}
 
 		ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-		collection := dbClient.Database("kpacubo").Collection("messages")
+		collection := dbClient.Database(config.DBName).Collection(config.CollName)
 
 		message.UID = client.uid
 		if client.uid != "" {
@@ -151,7 +171,7 @@ func HandleGetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 2*time.Second)
-	collection := dbClient.Database("kpacubo").Collection("messages")
+	collection := dbClient.Database(config.DBName).Collection(config.CollName)
 	options := options.Find()
 	options.SetLimit(int64(50)).SetSort(bson.M{"_id": -1})
 
@@ -241,26 +261,36 @@ func InitDB() {
 		return
 	}
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	collection := dbClient.Database("kpacubo").Collection("messages")
+	collection := dbClient.Database(config.DBName).Collection(config.CollName)
 	m := Message{Text: "Server started!", UID: ""}
 	collection.InsertOne(ctx, m)
 }
 
 func main() {
+	configBytes, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		log.Fatalf("Readn't: %v", err)
+	}
+
+	err = json.Unmarshal(configBytes, config)
+	if err != nil {
+		log.Fatalf("Unmarshalln't: %v", err)
+	}
+
 	messageChan := make(chan *Message)
 	clientChan := make(chan *Client)
 	go ChatRoom(clientChan, messageChan)
 	InitDB()
 
-	http.HandleFunc("/messages", HandleGetMessages)
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc(config.MessageRoute, HandleGetMessages)
+	http.HandleFunc(config.WSRoute, func(w http.ResponseWriter, r *http.Request) {
 		upgraderHandler(w, r, clientChan, messageChan)
 	})
 	useTLS := os.Getenv("USE_TLS")
 	if useTLS == "1" {
-		http.ListenAndServeTLS(":2000", "/cert/live/kpacubo.xyz/fullchain.pem", "/cert/live/kpacubo.xyz/privkey.pem", nil)
+		http.ListenAndServeTLS(config.Port, config.CertFile, config.KeyFile, nil)
 	} else {
-		http.ListenAndServe(":2000", nil)
+		http.ListenAndServe(config.Port, nil)
 	}
 
 }
