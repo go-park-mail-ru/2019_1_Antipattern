@@ -34,9 +34,9 @@ type Config struct {
 	KeyFile			string							`json:"key_file"`
 }
 
-var (
-	config = &Config{}
-)
+
+var config = &Config{}
+
 
 type Message struct {
 	ID     string `json:"_id,omitempty"`

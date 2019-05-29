@@ -91,7 +91,7 @@ func main() {
 	}
 
 	models.InitModels(false)
-	listener, err := net.Listen("tcp", config.AuthPort)
+	listener, err := net.Listen("tcp", ":" + config.AuthPort)
 	log.Printf("API grpc server listening on " + config.AuthPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

@@ -1,14 +1,4 @@
 {
-  "api_port": "8080",
   "auth_port": "8081",
-  "api_prefix": "/api",
-  "auth_route": "/auth",
-  "reg_route": "/register",
-  "avatar_route": "/upload_avatar",
-  "profile_route": "/profile",
-  "leader_route": "/leaderboard/{page:[0-9]+}",
-  "user_route": "/user/{id:[0-9A-Fa-f]+}",
-  "login_route": "/login",
-  "server_address": "identity_service",
-  "auth_domain": ".kpacubo.xyz"
+  "secret": "secret"
 }

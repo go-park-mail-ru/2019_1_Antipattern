@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"log"
 	"net"
 	"strconv"
@@ -14,7 +16,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-var secret = []byte("secret")
+type Config struct {
+	AuthPort		string							`json:"auth_port"`
+	Secret			string							`json:"secret"`
+}
+
+
+var config = &Config{}
+
+var secret []byte
 
 type server struct{}
 
@@ -72,8 +82,20 @@ func (s *server) RevokeToken(ctx context.Context, request *pb.RevokeTokenRequest
 }
 
 func main() {
-	listener, err := net.Listen("tcp", ":8081")
-	log.Printf("Identity server listening on 8081")
+	configBytes, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		log.Fatalf("Readn't: %v", err)
+	}
+
+	err = json.Unmarshal(configBytes, config)
+	if err != nil {
+		log.Fatalf("Unmarshalln't: %v", err)
+	}
+
+	secret = []byte(config.Secret)
+
+	listener, err := net.Listen("tcp", ":" + config.AuthPort)
+	log.Printf("Identity server listening on " + config.AuthPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
