@@ -154,6 +154,7 @@ func HandleAvatarUpload(w http.ResponseWriter, r *http.Request, user *models.Use
 }
 
 func HandleGetUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("X-Test", "24")
 	response := webJson.Response{
 		Type: "uslist",
 	}
