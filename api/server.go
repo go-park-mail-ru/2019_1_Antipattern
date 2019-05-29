@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -13,6 +15,25 @@ import (
 	"./models"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
+)
+
+type Config struct {
+	APIPort			string							`json:"api_port"`
+	AuthPort		string							`json:"auth_port"`
+	APIPrefix		string							`json:"api_prefix"`
+	AuthRoute		string							`json:"auth_route"`
+	RegRoute		string							`json:"reg_route"`
+	AvatarRoute		string							`json:"avatar_route"`
+	ProfileRoute	string							`json:"profile_route"`
+	LeaderRoute		string							`json:"leader_route"`
+	UserRoute		string							`json:"user_route"`
+	LoginRoute		string							`json:"login_route"`
+	ServerAddress	string							`json:"server_address"`
+	AuthDomain		string							`json:"auth_domain"`
+}
+
+var (
+	config *Config
 )
 
 type server struct{}
@@ -44,24 +65,36 @@ func NewRouter() http.Handler {
 
 	r := mux.NewRouter()
 	authProvider := auth.JWTProvider{
-		ServerAddress: "identity_service:8081",
+		ServerAddress: config.ServerAddress + config.AuthPort,
 		Secure:        false,
-		AuthDomain:    ".kpacubo.xyz",
+		AuthDomain:    config.AuthDomain,
 	}
-	r.HandleFunc("/api/auth", HandlerWrapperUnauthorized(handlers.HandleLogin, authProvider)).Methods("POST")
-	r.HandleFunc("/api/register", HandlerWrapperUnauthorized(handlers.HandleRegister, authProvider)).Methods("POST")
-	r.HandleFunc("/api/upload_avatar", middleware.AuthMiddleware(handlers.HandleAvatarUpload, authProvider)).Methods("POST")
-	r.HandleFunc("/api/profile", middleware.AuthMiddleware(handlers.HandleUpdateUser, authProvider)).Methods("PUT")
-	r.HandleFunc("/api/profile", middleware.AuthMiddleware(handlers.HandleGetUserData, authProvider)).Methods("GET")
-	r.HandleFunc("/api/leaderboard/{page:[0-9]+}", handlers.HandleGetUsers).Methods("GET")
-	r.HandleFunc("/api/user/{id:[0-9A-Fa-f]+}", handlers.HandleGetUserByID).Methods("GET")
-	r.HandleFunc("/api/login", middleware.AuthMiddleware(HandlerWrapperAuthorized(handlers.HandleLogout, authProvider), authProvider)).Methods("DELETE")
+	r.HandleFunc(config.APIPrefix + config.AuthRoute, HandlerWrapperUnauthorized(handlers.HandleLogin, authProvider)).Methods("POST")
+	r.HandleFunc(config.APIPrefix + config.RegRoute, HandlerWrapperUnauthorized(handlers.HandleRegister, authProvider)).Methods("POST")
+	r.HandleFunc(config.APIPrefix + config.AvatarRoute, middleware.AuthMiddleware(handlers.HandleAvatarUpload, authProvider)).Methods("POST")
+	r.HandleFunc(config.APIPrefix + config.ProfileRoute, middleware.AuthMiddleware(handlers.HandleUpdateUser, authProvider)).Methods("PUT")
+	r.HandleFunc(config.APIPrefix + config.ProfileRoute, middleware.AuthMiddleware(handlers.HandleGetUserData, authProvider)).Methods("GET")
+	r.HandleFunc(config.APIPrefix + config.LeaderRoute, handlers.HandleGetUsers).Methods("GET")
+	r.HandleFunc(config.APIPrefix + config.UserRoute, handlers.HandleGetUserByID).Methods("GET")
+	r.HandleFunc(config.APIPrefix + config.LoginRoute, middleware.AuthMiddleware(HandlerWrapperAuthorized(handlers.HandleLogout, authProvider), authProvider)).Methods("DELETE")
 	return r
 }
 func main() {
+	config = &Config{}
+
+	configBytes, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		log.Fatalf("Readn't: %v", err)
+	}
+
+	err = json.Unmarshal(configBytes, config)
+	if err != nil {
+		log.Fatalf("Unmarshalln't: %v", err)
+	}
+
 	models.InitModels(false)
-	listener, err := net.Listen("tcp", ":8081")
-	log.Printf("API grpc server listening on 8081")
+	listener, err := net.Listen("tcp", config.AuthPort)
+	log.Printf("API grpc server listening on " + config.AuthPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -70,5 +103,5 @@ func main() {
 	go s.Serve(listener)
 
 	defer models.FinalizeModels()
-	log.Fatal(http.ListenAndServe(":8080", middleware.PanicMiddleware(NewRouter())))
+	log.Fatal(http.ListenAndServe(config.APIPort, middleware.PanicMiddleware(NewRouter())))
 }
